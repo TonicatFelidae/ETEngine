@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ET.ResourceManagement;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,6 @@ using UnityEngine.UI;
 using UnityScreenNavigator.Runtime.Core.Page;
 using UnityScreenNavigator.Runtime.Core.Shared;
 using UnityScreenNavigator.Runtime.Foundation;
-using RSFramework.ResourceManagement;
 using UnityScreenNavigator.Runtime.Foundation.Coroutine;
 using VContainer;
 

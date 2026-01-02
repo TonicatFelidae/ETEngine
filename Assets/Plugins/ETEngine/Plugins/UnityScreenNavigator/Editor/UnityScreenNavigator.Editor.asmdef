@@ -3,7 +3,7 @@
     "rootNamespace": "",
     "references": [
         "UnityScreenNavigator",
-        "RSResourceLoader"
+        "ETResourceLoader"
     ],
     "includePlatforms": [
         "Editor"

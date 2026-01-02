@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 using UnityEngine.UI;
 using UnityScreenNavigator.Runtime.Core.Shared;
 using UnityScreenNavigator.Runtime.Foundation;
-using RSFramework.ResourceManagement;
+using ET.ResourceManagement;
 using UnityScreenNavigator.Runtime.Core.Page;
 using UnityScreenNavigator.Runtime.Foundation.Coroutine;
 using VContainer;

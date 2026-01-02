@@ -7,7 +7,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using RSFramework.ResourceManagement;
+using ET.ResourceManagement;
 
 namespace UnityScreenNavigator.Editor.Foundation.AssetLoader
 {

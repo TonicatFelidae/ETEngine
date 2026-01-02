@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityScreenNavigator.Runtime.Core.Modal;
 using UnityScreenNavigator.Runtime.Foundation;
-using RSFramework.ResourceManagement;
+using ET.ResourceManagement;
 #if UNITY_EDITOR
 using UnityEditor;
 

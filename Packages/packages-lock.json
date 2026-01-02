@@ -5,7 +5,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "a5226fff9b6c029094a97ce0d79d396050014325"
+      "hash": "59838134b8878bafcce388d1975885e8e27504a1"
     },
     "com.nekoniiistudio.et.supportkit": {
       "version": "https://github.com/TonicatFelidae/ETPlugin.git?path=Packages/com.nekoniiistudio.et.supportkit#main",
