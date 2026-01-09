@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.nekoniiistudio.et.resourceloader": "https://github.com/TonicatFelidae/ETPlugin.git?path=Packages/com.nekoniiistudio.et.resourceloader#main",
     "com.nekoniiistudio.et.supportkit": "https://github.com/TonicatFelidae/ETPlugin.git?path=Packages/com.nekoniiistudio.et.supportkit#main",
     "com.unity.addressables": "1.22.3",

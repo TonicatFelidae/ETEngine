@@ -1,18 +1,25 @@
 {
   "dependencies": {
+    "com.cysharp.unitask": {
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "73a63b7f672b88f7e9992f6917eb458a8cbb6fa9"
+    },
     "com.nekoniiistudio.et.resourceloader": {
       "version": "https://github.com/TonicatFelidae/ETPlugin.git?path=Packages/com.nekoniiistudio.et.resourceloader#main",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "59838134b8878bafcce388d1975885e8e27504a1"
+      "hash": "58988ecf07a57762c8438e90826ed2fcce150f21"
     },
     "com.nekoniiistudio.et.supportkit": {
       "version": "https://github.com/TonicatFelidae/ETPlugin.git?path=Packages/com.nekoniiistudio.et.supportkit#main",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "b413fa2115cb8d1a321f988aa5f9833b14b2a6e3"
+      "hash": "e4936924269003ddff0768cd90ea0bb4e1d2d0eb"
     },
     "com.unity.2d.animation": {
       "version": "9.2.0",
