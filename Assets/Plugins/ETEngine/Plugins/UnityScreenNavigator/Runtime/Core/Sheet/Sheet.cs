@@ -109,7 +109,10 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
             yield break;
         }
 #endif
-
+        public virtual void UpdateNewState()
+        {
+        }
+        
         public virtual void DidExit()
         {
         }

@@ -17,7 +17,6 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
     public class PopupContainer : MonoBehaviour, IScreenContainer
     {
         PopupFactory _prefabFactory;
-        [Inject]
         public void Init(
             PopupFactory pageFactory)
         {

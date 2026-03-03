@@ -14,9 +14,8 @@ namespace UnityScreenNavigator.Runtime.Core.Page
 {
     [RequireComponent(typeof(RectMask2D))]
     public class PageContainer : MonoBehaviour, IScreenContainer
-    {   
+    {
         PageFactory _prefabFactory;
-        [Inject]
         public void Init(
             PageFactory pageFactory)
         {
@@ -198,8 +197,8 @@ namespace UnityScreenNavigator.Runtime.Core.Page
             bool stack = true,
             string pageId = null,
             bool loadAsync = true,
-            Action<(string pageId, Page page)> onLoad = null
-        ) where T : Page    
+            Action<(string pageId, T page)> onLoad = null
+        ) where T : Page
         {
             return CoroutineManager.Instance.Run(PushRoutine<T>(
                 resourceKey,
@@ -253,34 +252,42 @@ namespace UnityScreenNavigator.Runtime.Core.Page
             string resourceKey,
             bool playAnimation,
             bool stack = true,
-            Action<(string pageId, Page page)> onLoad = null,
+            Action<(string pageId, T page)> onLoad = null,
             bool loadAsync = true,
             string pageId = null
-        )  where T : Page    
+        ) where T : Page
         {
             Assert.IsNotNull(resourceKey);
             if (IsInTransition)
             {
                 Debug.LogWarning("Cannot transition because the screen is already in transition.");
-                yield break;  // or ignore, depending on behavior you want
+                yield return null; // Return null instead of yield break to properly complete the coroutine
+                yield break;
             }
-            //Assert.IsFalse(IsInTransition,
-            //    "Cannot transition because the screen is already in transition.");
 
             _transitionHandler.Begin();
 
             Page page = null;
-            
+
             yield return LoadPageAndBind<T>(resourceKey,
                 loadAsync,
                 (p, lh, newPageId) =>
                 {
-                    if (string.IsNullOrEmpty(pageId) ) pageId = newPageId; 
+                    if (string.IsNullOrEmpty(pageId)) pageId = newPageId;
                     page = p;
                     _assetLoadHandles.TryAdd(pageId, lh);
-                    
-                    onLoad?.Invoke((pageId, p));
+
+                    onLoad?.Invoke((pageId, (T)p));
                 });
+
+            // Check if page was created successfully
+            if (page == null)
+            {
+                _transitionHandler.End();
+                Debug.LogError($"Failed to create page for resource key: {resourceKey}");
+                yield return null; // Return null for failed page creation
+                yield break;
+            }
 
             var context = PagePushContext.Create(pageId, page, _orderedPageIds, _pages, stack, _isActivePageStacked);
 
@@ -294,7 +301,7 @@ namespace UnityScreenNavigator.Runtime.Core.Page
 
             if (context.ShouldRemoveExitPage)
             {
-                context.ExitPage.gameObject.SetActive(false);   
+                context.ExitPage.gameObject.SetActive(false);
                 _pages.Remove(context.ExitPageId);
                 _orderedPageIds.Remove(context.ExitPageId);
             }
@@ -307,6 +314,9 @@ namespace UnityScreenNavigator.Runtime.Core.Page
 
             // Resource cleanup isn't tied to the transition itself, so it should be handled asynchronously in the background.
             StartCoroutine(AfterPushRoutine(context));
+
+            // Yield the page as the final result of the coroutine
+            yield return page;
         }
 
         private IEnumerator AfterPushRoutine(
@@ -446,7 +456,7 @@ namespace UnityScreenNavigator.Runtime.Core.Page
         ) where T : Page
         {
             var existPage = GetIDAndObject<T>();
-            string pageId = null;  
+            string pageId = null;
             if (existPage.Item2 == null)
             {
                 pageId ??= Guid.NewGuid().ToString();
@@ -461,7 +471,7 @@ namespace UnityScreenNavigator.Runtime.Core.Page
                     throw assetLoadHandle.OperationException;
                 var page = _prefabFactory.Create<Page>(assetLoadHandle.Result); // Instantiate(assetLoadHandle.Result);
                 page.gameObject.name = resourceKey;
-                onLoaded?.Invoke(page, assetLoadHandle,pageId);
+                onLoaded?.Invoke(page, assetLoadHandle, pageId);
             }
             else
             {
@@ -469,12 +479,12 @@ namespace UnityScreenNavigator.Runtime.Core.Page
                 var assetLoadHandle = loadAsync
                     ? AssetLoader.LoadAsync<GameObject>(resourceKey)
                     : AssetLoader.Load<GameObject>(resourceKey);
-                onLoaded?.Invoke(existPage.Item2, default,pageId);
+                onLoaded?.Invoke(existPage.Item2, default, pageId);
             }
         }
         public Page Get(Type type)
         {
-            if (type == null) return null;  
+            if (type == null) return null;
             foreach (var page in _pages)
             {
                 if (type.IsInstanceOfType(page.Value))
@@ -485,18 +495,18 @@ namespace UnityScreenNavigator.Runtime.Core.Page
 
             return null;
         }
-        public (string,T) GetIDAndObject<T>() where T : Page
+        public (string, T) GetIDAndObject<T>() where T : Page
         {
             foreach (var page in _pages)
             {
                 if (page.Value == null) continue;
                 if (page.Value is T)
                 {
-                    return (page.Key,(T)page.Value);
+                    return (page.Key, (T)page.Value);
                 }
             }
 
-            return (null,null);
+            return (null, null);
         }
         public T Get<T>() where T : Page
         {
@@ -512,6 +522,6 @@ namespace UnityScreenNavigator.Runtime.Core.Page
             return null;
         }
     }
-    
+
 
 }

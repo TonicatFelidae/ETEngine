@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,66 +12,90 @@ namespace ETEngine
 {
     public class UIManager : IUIManager
     {
-        [Header("Containers")] private readonly PageContainer _pageContainer;
-        public PageContainer PageContainer => _pageContainer;
-        private readonly PopupContainer _popupContainer;
-        public PopupContainer PopupContainer => _popupContainer;
-        private UIManager(
-            PageContainer pageContainer,
-            PopupContainer popupContainer)
+        [Inject] MainCanvas _mainCanvas;
+        public PageContainer PageContainer => _mainCanvas.pageContainer;
+        public PopupContainer PopupContainer => _mainCanvas.popupContainer;
+        public Dictionary<string, SheetContainer> SheetContainers { get => _sheetContainers; set => _sheetContainers = value; }
+
+        private System.Collections.Generic.Dictionary<string, SheetContainer> _sheetContainers = new();
+        public void Init(PageContainer pageContainer, PopupContainer popupContainer)
         {
-            _pageContainer = pageContainer;
-            _popupContainer = popupContainer;
+            //PageContainer = pageContainer;
+            // PopupContainer = popupContainer;
         }
 
-        public async UniTask PushPage<T>(string pageId = null, bool playAnimation = true,
-            Action<(string pageId, Page page)> loadCallback = null
+        public async UniTask<T> PushPage<T>(string pageId = null, bool playAnimation = true,
+            Action<(string pageId, T page)> loadCallback = null
         )
             where T : Page
         {
             if (string.IsNullOrEmpty(pageId)) pageId = typeof(T).Name;
-            await _pageContainer.Push<T>(pageId, playAnimation: playAnimation, onLoad: loadCallback).Task;
+            var handle = PageContainer.Push<T>(pageId, playAnimation: playAnimation, onLoad: loadCallback);
+            var result = await handle.Task;
+
+            // The result should be the Page object returned from the coroutine
+            if (result is Page page)
+            {
+                return page as T;
+            }
+
+            // Fallback: try to get the page from the container if the result was null
+            // This provides backward compatibility and handles edge cases
+            Debug.LogWarning($"PushPage<{typeof(T).Name}> returned null result, attempting to retrieve from container");
+            return PageContainer.Get<T>();
         }
 
         public async UniTask PopPage(bool playAnimation = true)
         {
-            await _pageContainer.Pop(playAnimation);
+            await PageContainer.Pop(playAnimation);
         }
 
 
-        public async UniTask PushPopup<T>(string modelId = null, bool playAnimation = true,
+        public async UniTask<T> PushPopup<T>(string modelId = null, bool playAnimation = true,
             Action<(string modalId, T modal)> loadCallback = null
         ) where T : Popup
         {
+
             if (string.IsNullOrEmpty(modelId)) modelId = typeof(T).Name;
-            await _popupContainer.Push(modelId, playAnimation, onLoad: loadCallback).Task;
+            var handle = PopupContainer.Push<T>(modelId, playAnimation, onLoad: loadCallback);
+            var result = await handle.Task;
+
+            // The result should be the Popup object returned from the coroutine
+            if (result is Popup popup)
+            {
+                return popup as T;
+            }
+            // Fallback: try to get the popup from the container if the result was null
+            // This provides backward compatibility and handles edge cases
+            Debug.LogWarning($"PushPopup<{typeof(T).Name}> returned null result, attempting to retrieve from container");
+            return PopupContainer.Get<T>();
         }
 
         public async UniTask PopPopup(bool playAnimation = true)
         {
-            await _popupContainer.Pop(playAnimation);
+            await PopupContainer.Pop(playAnimation);
         }
 
         public T GetPopup<T>() where T : Popup
         {
-            return _popupContainer.Get<T>();
+            return PopupContainer.Get<T>();
         }
 
         public T GetPage<T>() where T : Page
         {
-            return _pageContainer.Get<T>();
+            return PageContainer.Get<T>();
         }
 
 
         public async UniTask PopPageAsync()
         {
-            if (_pageContainer.IsInTransition)
+            if (PageContainer.IsInTransition)
             {
                 Debug.LogWarning("Transition is running, skipping Pop!");
                 return;
             }
 
-            var handle = _pageContainer.Pop(false);
+            var handle = PageContainer.Pop(false);
             await handle.Task; // Wait for Pop animation to complete
 
             Debug.Log("Pop page completed!");
@@ -82,16 +107,16 @@ namespace ETEngine
         /// <param name="playAnimation">Whether to play the transition animation.</param>
         public void PopModal(int numberModal = 1, bool playAnimation = false)
         {
-            if (_popupContainer == null) return;
+            if (PopupContainer == null) return;
             if (numberModal <= 1)
             {
-                _popupContainer.Pop(playAnimation);
+                PopupContainer.Pop(playAnimation);
                 return;
             }
 
-            _popupContainer.Pop(playAnimation, numberModal);
+            PopupContainer.Pop(playAnimation, numberModal);
         }
-        
+
 
 
         /// <summary>
@@ -101,14 +126,14 @@ namespace ETEngine
         /// <param name="playAnimation">Whether to play the transition animation.</param>
         public void PushModal(string modalName, bool playAnimation = false)
         {
-            if (_popupContainer == null) return;
-            _popupContainer.Push(modalName, playAnimation);
+            if (PopupContainer == null) return;
+            PopupContainer.Push(modalName, playAnimation);
         }
 
         public void PushModal<T>(Action<(string modalId, T modal)> loadCallback = null)
             where T : Popup
         {
-            _popupContainer.Push(typeof(T).Name, true, onLoad: loadCallback);
+            PopupContainer.Push(typeof(T).Name, true, onLoad: loadCallback);
         }
 
         public void PushModal<T>(string modalName, UnityAction onConfirm, UnityAction onCancle,
@@ -123,8 +148,8 @@ namespace ETEngine
         public void PushModal<T>(string modalName, UnityAction onConfirm, UnityAction onCancle, UnityAction action0,
             UnityAction action1 = null, UnityAction action2 = null, bool playAnimation = true) where T : Popup
         {
-            if (_popupContainer == null) return;
-            _popupContainer.Push("ConfirmModal", false, onLoad: x =>
+            if (PopupContainer == null) return;
+            PopupContainer.Push("ConfirmModal", false, onLoad: x =>
             {
                 if (x.modal is IActionPopup confirmPopupController)
                 {
@@ -135,8 +160,36 @@ namespace ETEngine
 
         public void PopModal()
         {
-            _popupContainer.Pop(true);
+            PopupContainer.Pop(true);
         }
+
+        // Add a private dictionary to store registered sheets
+
+        // Registers a Sheet instance by type and optional ID
+        public void RegisterSheetContainer<T>(T sheetContainer, string sheetContainerId = null) where T : SheetContainer
+        {
+            if (sheetContainerId == null)
+                sheetContainerId = typeof(T).Name;
+            if (sheetContainer == null)
+                throw new InvalidOperationException($"Sheet of type {typeof(T).Name} not found in the scene.");
+
+            SheetContainers[sheetContainerId] = sheetContainer;
+        }
+
+        // Retrieves a registered Sheet by type (using type name as key)
+        public SheetContainer GetSheetContainer<T>(string sheetContainerId = null)
+        {
+            if (sheetContainerId == null)
+                sheetContainerId = typeof(T).Name;
+            if (SheetContainers.TryGetValue(sheetContainerId, out var sheetContainer))
+                return sheetContainer;
+
+            throw new InvalidOperationException($"Sheet of type {typeof(T).Name} is not registered.");
+        }
+
+        public void ShowLoadingPage(string messege = null) => _mainCanvas.loadingPage.Show(messege);
+
+        public void HideLoadingPage() => _mainCanvas.loadingPage.Hide();
 
         /*
             /// <summary>

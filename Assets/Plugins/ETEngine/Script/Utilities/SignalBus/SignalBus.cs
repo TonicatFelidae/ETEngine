@@ -36,7 +36,7 @@ namespace ETEngine.SignalSystem
                 list.Add(callback);
         }
 
-        public void UnSubscribe<T>(UnityAction<T> callback)
+        public void Unsubscribe<T>(UnityAction<T> callback)
         {
             var type = typeof(T);
             if (!_listeners.TryGetValue(type, out var list))

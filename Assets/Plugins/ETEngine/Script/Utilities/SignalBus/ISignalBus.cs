@@ -9,6 +9,6 @@ namespace ETEngine.SignalSystem
     {
         void Fire<T>(T signal);
         void Subscribe<T>(UnityAction<T> callback);
-        void UnSubscribe<T>(UnityAction<T> callback);
+        void Unsubscribe<T>(UnityAction<T> callback);
     }
 }
