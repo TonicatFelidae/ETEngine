@@ -1,0 +1,21 @@
+{
+    "name": "ETEngine",
+    "rootNamespace": "",
+    "references": [
+        "UniTask",
+        "UnityScreenNavigator",
+        "VContainer",
+        "Unity.Services.Core",
+        "ETResourceLoader",
+        "Unity.Services.Analytics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
