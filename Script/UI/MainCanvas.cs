@@ -6,7 +6,7 @@ using VContainer.Unity;
 
 namespace ETEngine
 {
-    public class MainCanvas: MonoBehaviour
+    public class MainCanvas : MonoBehaviour
     {
         public PageContainer pageContainer;
         public PopupContainer popupContainer;

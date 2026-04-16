@@ -57,15 +57,17 @@ namespace ETEngine
         {
 
             if (string.IsNullOrEmpty(modelId)) modelId = typeof(T).Name;
-            Debug.Log($"[PushPopup] <{typeof(T).Name}> IsInTransition={PopupContainer?.IsInTransition}");
             var handle = PopupContainer.Push<T>(modelId, playAnimation, onLoad: loadCallback);
             var result = await handle.Task;
 
+            // The result should be the Popup object returned from the coroutine
             if (result is Popup popup)
+            {
                 return popup as T;
-
-            // Fallback: PushRoutine completed without yielding a result
-            Debug.LogWarning($"[PushPopup] <{typeof(T).Name}> result=null (type={result?.GetType().Name ?? "null"}), fallback Get Count={PopupContainer.Count}");
+            }
+            // Fallback: try to get the popup from the container if the result was null
+            // This provides backward compatibility and handles edge cases
+            Debug.LogWarning($"PushPopup<{typeof(T).Name}> returned null result, attempting to retrieve from container");
             return PopupContainer.Get<T>();
         }
 

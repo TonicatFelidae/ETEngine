@@ -5,9 +5,9 @@
         "UniTask",
         "UnityScreenNavigator",
         "VContainer",
-        "Unity.Services.Core",
         "ETResourceLoader",
-        "Unity.Services.Analytics"
+        "Unity.Services.Analytics",
+        "Unity.Services.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

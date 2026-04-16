@@ -10,9 +10,13 @@ namespace ETEngine
         readonly PopupFactory _popupFactory;
         readonly MainCanvas _mainCanvas;
 
-        public UIBootstrap(MainCanvas mainCanvas, PageFactory pageFactory, PopupFactory popupFactory)
+        public UIBootstrap(
+            MainCanvas mainCanvas,
+            PageFactory pageFactory,
+            PopupFactory popupFactory
+            )
         {
-           // _mainCanvas = mainCanvas;
+            // _mainCanvas = mainCanvas;
             mainCanvas.ReInitiation(pageFactory, popupFactory);
         }
 
