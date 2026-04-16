@@ -11,21 +11,16 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
     {
         [SerializeField] private ModalBackdropTransitionAnimationContainer _animationContainer;
         [SerializeField] private bool _closeModalWhenClicked;
-        [SerializeField] private bool _keepPrefabOffsets;
 
         private CanvasGroup _canvasGroup;
         private RectTransform _parentTransform;
         private RectTransform _rectTransform;
-        private Vector2 _prefabOffsetMin;
-        private Vector2 _prefabOffsetMax;
 
         public ModalBackdropTransitionAnimationContainer AnimationContainer => _animationContainer;
 
         private void Awake()
         {
             _rectTransform = (RectTransform)transform;
-            _prefabOffsetMin = _rectTransform.offsetMin;
-            _prefabOffsetMax = _rectTransform.offsetMax;
             _canvasGroup = gameObject.GetOrAddComponent<CanvasGroup>();
             
             if (_closeModalWhenClicked)
@@ -51,20 +46,10 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
             }
         }
 
-        private void FillParentWithOffsets()
-        {
-            _rectTransform.FillParent(_parentTransform);
-            if (_keepPrefabOffsets)
-            {
-                _rectTransform.offsetMin = _prefabOffsetMin;
-                _rectTransform.offsetMax = _prefabOffsetMax;
-            }
-        }
-
         public void Setup(RectTransform parentTransform, int modalIndex)
         {
             _parentTransform = parentTransform;
-            FillParentWithOffsets();
+            _rectTransform.FillParent(_parentTransform);
             _canvasGroup.interactable = _closeModalWhenClicked;
             OnSetup(parentTransform, modalIndex);
             gameObject.SetActive(false);
@@ -82,7 +67,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         private IEnumerator EnterRoutine(bool playAnimation)
         {
             gameObject.SetActive(true);
-            FillParentWithOffsets();
+            _rectTransform.FillParent(_parentTransform);
             _canvasGroup.alpha = 1;
 
             if (playAnimation)
@@ -100,7 +85,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
                 }
             }
 
-            FillParentWithOffsets();
+            _rectTransform.FillParent(_parentTransform);
         }
 
         internal AsyncProcessHandle Exit(bool playAnimation)
@@ -111,7 +96,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         private IEnumerator ExitRoutine(bool playAnimation)
         {
             gameObject.SetActive(true);
-            FillParentWithOffsets();
+            _rectTransform.FillParent(_parentTransform);
             _canvasGroup.alpha = 1;
 
             if (playAnimation)

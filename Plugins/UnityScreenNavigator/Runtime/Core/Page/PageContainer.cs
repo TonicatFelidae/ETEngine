@@ -521,6 +521,29 @@ namespace UnityScreenNavigator.Runtime.Core.Page
 
             return null;
         }
+
+        /// <summary>
+        ///     Clear all pages from the container.
+        /// </summary>
+        public void Clear()
+        {
+            foreach (var pageId in _orderedPageIds)
+            {
+                if (!_pages.TryGetValue(pageId, out var page)) continue;
+
+                if (UnityScreenNavigatorSettings.Instance.CallCleanupWhenDestroy)
+                    page.BeforeReleaseAndForget();
+
+                Destroy(page.gameObject);
+
+                if (_assetLoadHandles.TryGetValue(pageId, out var assetLoadHandle))
+                    AssetLoader.Release(assetLoadHandle);
+            }
+            _assetLoadHandles.Clear();
+            _pages.Clear();
+            _orderedPageIds.Clear();
+            _isActivePageStacked = false;
+        }
     }
 
 

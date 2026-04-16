@@ -318,12 +318,8 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         )
         {
             Assert.IsNotNull(resourceKey);
-            Debug.Log($"[PushPopup] PushRoutine: key={resourceKey}, InTransition={IsInTransition}, factory={_prefabFactory != null}");
-            if (IsInTransition)
-            {
-                Debug.LogWarning("[PushPopup] PushRoutine: skipped (in transition)");
-                yield break;
-            }
+            Assert.IsFalse(IsInTransition,
+                "Cannot transition because the screen is already in transition.");
 
             _transitionHandler.Begin();
 
@@ -336,7 +332,6 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
                 loadAsync,
                 (m, lh) =>
                 {
-                    Debug.Log($"[PushPopup] LoadModalAndBind: popup={m != null}");
                     popup = m;
                     _assetLoadHandles.Add(modalId, lh);
                     onLoad?.Invoke((modalId, m));
@@ -363,7 +358,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
             Assert.IsTrue(popCount >= 1);
             Assert.IsTrue(_orderedModalIds.Count >= popCount,
                 "Cannot transition because the modal count is less than the pop count.");
-            
+
             if (IsInTransition)
             {
                 Debug.LogWarning("Cannot transition because the screen is already in transition.");
@@ -503,9 +498,37 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         }
         public T Get<T>(string ID = null) where T : Popup
         {
+            foreach (var _modals in _modals)
+            {
+                if (_modals.Value == null) continue;
+                if (_modals.Value is T)
+                {
+                    return (T)_modals.Value;
+                }
+            }
+
+            return null;
             ID = ID ?? typeof(T).Name;
             _modals.TryGetValue(ID, out Popup modal);
             return (T)modal;
+        }
+        public void Clear()
+        {
+            foreach (var modalId in _orderedModalIds)
+            {
+                if (!_modals.TryGetValue(modalId, out var modal)) continue;
+
+                if (UnityScreenNavigatorSettings.Instance.CallCleanupWhenDestroy)
+                    modal.BeforeReleaseAndForget();
+
+                Destroy(modal.gameObject);
+
+                if (_assetLoadHandles.TryGetValue(modalId, out var assetLoadHandle))
+                    AssetLoader.Release(assetLoadHandle);
+            }
+            _assetLoadHandles.Clear();
+            _modals.Clear();
+            _orderedModalIds.Clear();
         }
     }
 }
