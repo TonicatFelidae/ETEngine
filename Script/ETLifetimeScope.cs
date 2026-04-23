@@ -20,8 +20,9 @@ namespace ETEngine
         protected override void Configure(IContainerBuilder builder)
         {
             Debug.Log($"[ETLifetimeScope] [{gameObject.name}] Configure started");
-            if (_projectInstallerSetup.useMainCanvasForAll) builder.RegisterComponentInNewPrefab(_projectInstallerSetup.mainCanvas, Lifetime.Singleton).DontDestroyOnLoad();
             Debug.Log($"[ETLifetimeScope] [{gameObject.name}] Is using main canvas for all: {_projectInstallerSetup.useMainCanvasForAll}");
+            UIManagerInstaller.Install(builder, _projectInstallerSetup);
+            Debug.Log($"[ETLifetimeScope] [{gameObject.name}] UIManagerInstaller Install completed.");
             Register(builder);
             Debug.Log($"[ETLifetimeScope] [{gameObject.name}] Registered");
             builder.RegisterBuildCallback(RegisterBuildCallback);

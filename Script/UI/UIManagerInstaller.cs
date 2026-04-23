@@ -28,8 +28,6 @@ namespace ETEngine
             builder.Register<PopupFactory>(Lifetime.Scoped);
             builder.Register<IUIManager, UIManager>(Lifetime.Scoped);
             builder.RegisterEntryPoint<UIBootstrap>();
-
-            Debug.Log("UIManagerInstaller Install completed.");
         }
     }
 }
