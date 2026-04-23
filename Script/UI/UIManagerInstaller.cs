@@ -8,10 +8,16 @@ namespace ETEngine
 {
     public class UIManagerInstaller
     {
+        public static bool mainCasvasForAllInstalled = false;
         public static void Install(IContainerBuilder builder, ProjectInstallerSetup projectInstallerSetup)
         {
             if (projectInstallerSetup.useMainCanvasForAll)
             {
+                if (!mainCasvasForAllInstalled)
+                {
+                    builder.RegisterComponentInNewPrefab(projectInstallerSetup.mainCanvas, Lifetime.Singleton).DontDestroyOnLoad();
+                    mainCasvasForAllInstalled = true;
+                }
             }
             else
             {
