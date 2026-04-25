@@ -561,43 +561,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 5834328286095382988}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ae6bd4afb6910443a60c9297234da24, type: 3}
+  m_Script: {fileID: 11500000, guid: 0df4fb37acc434680948a1c88e4874b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _soAB: {fileID: 3665769168623898671}
   _soBG: {fileID: 6106274666056751878}
   _soUI: {fileID: 2200318540432906510}
   _soEF: {fileID: 7946599173386019263}
-  _audioMixer: {fileID: 24100000, guid: 8038d1cdafeb949a2bb4730b523126a2, type: 2}
+  _audioMixer: {fileID: 0}
   amberClips: []
-  backgroundClips:
-  - {fileID: 8300000, guid: 0f63a8d2fa6224a209c4fe96986e8d67, type: 3}
-  - {fileID: 8300000, guid: aae333416832a4baa9f44c660282f823, type: 3}
-  effectClips:
-  - {fileID: 8300000, guid: 0f6b6faae177449ccb79e528c46d86d8, type: 3}
-  - {fileID: 8300000, guid: 883603763907d9846bb84bf6bf5dadf2, type: 3}
-  - {fileID: 8300000, guid: fe492dfbfcafc0d488c9b5df4b6abfb7, type: 3}
-  - {fileID: 8300000, guid: 104aeb62acfaa284cb84b3460894adf1, type: 3}
-  - {fileID: 8300000, guid: 42635b9dddb8c7347a74a3a4f3ce0d1e, type: 3}
-  - {fileID: 8300000, guid: 7329c3eba2555f64bb17f525dae9f7d9, type: 3}
-  - {fileID: 8300000, guid: a79e34ab00b10e148b387c4c3ad522ff, type: 3}
-  - {fileID: 8300000, guid: 1cf555c8b89615547a436ff4880bc0c2, type: 3}
-  - {fileID: 8300000, guid: 8c2a45654f1bbd041b728b68a5cbcd86, type: 3}
-  - {fileID: 8300000, guid: 45537e308a29cf24da7903be0147d66e, type: 3}
-  - {fileID: 8300000, guid: 39cac79b46b1a91428754d2470393a67, type: 3}
-  - {fileID: 8300000, guid: 2f2328f983149f74e9719c4a01414c70, type: 3}
-  - {fileID: 8300000, guid: cad28a09e617be44aa14163c3bd2e14a, type: 3}
-  - {fileID: 8300000, guid: 1dfd065d1d730be4ca3a8dc68077a7a9, type: 3}
-  - {fileID: 8300000, guid: f3062ca37a91fdb41853d4ef203a1d78, type: 3}
-  buttonClips:
-  - {fileID: 8300000, guid: 774e3394ed0144538231bacf4f174ea9, type: 3}
-  - {fileID: 8300000, guid: 2525adf990fad4d588a5ff0b7fab05a3, type: 3}
-  - {fileID: 8300000, guid: ccd0500d8a77e4775a13a3239473eff5, type: 3}
+  backgroundClips: []
+  effectClips: []
+  buttonClips: []
   UIClips: []
-  catTouchClips:
-  - {fileID: 8300000, guid: 71262b1e470ee4325b49d176644469f1, type: 3}
-  - {fileID: 8300000, guid: 24432c1c895ae4c2aa19178757a0562a, type: 3}
-  - {fileID: 8300000, guid: 78a5ae1267d314197a6bba05ab9a0632, type: 3}
-  - {fileID: 8300000, guid: 7643bc32e5dff41a9ad1be6f1718dbc7, type: 3}
+  catTouchClips: []
   amberMultiply: 1
-  _pp_soundObject3D: {fileID: 7002423892130303070, guid: 24da480c4e8d4ea439552f55847ce078, type: 3}
+  _pp_soundObject3D: {fileID: 7002423892130303070, guid: 7005b43311a3746bab77fb19562b3142, type: 3}
