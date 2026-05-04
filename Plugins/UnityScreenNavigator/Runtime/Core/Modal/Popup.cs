@@ -12,11 +12,12 @@ using System.Threading.Tasks;
 namespace UnityScreenNavigator.Runtime.Core.Modal
 {
     [DisallowMultipleComponent]
-    public class Popup : MonoBehaviour, IPopupLifecycleEvent
+    public class Popup : MonoBehaviour, IPopupLifecycleEvent, IUIController
     {
         [SerializeField] private bool _usePrefabNameAsIdentifier = true;
 
-        [SerializeField] [EnabledIf(nameof(_usePrefabNameAsIdentifier), false)]
+        [SerializeField]
+        [EnabledIf(nameof(_usePrefabNameAsIdentifier), false)]
         private string _identifier;
 
         [SerializeField]
@@ -159,6 +160,10 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         }
 #endif
 
+        public virtual void UpdateNewState()
+        {
+        }
+
         public void AddLifecycleEvent(IPopupLifecycleEvent lifecycleEvent, int priority = 0)
         {
             _lifecycleEvents.AddItem(lifecycleEvent, priority);
@@ -268,7 +273,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
             }
 
             SetTransitionProgress(0.0f);
-            
+
             var routines = push
                 ? _lifecycleEvents.ExecuteLifecycleEventsSequentially(x => x.WillPushExit())
                 : _lifecycleEvents.ExecuteLifecycleEventsSequentially(x => x.WillPopExit());
@@ -317,7 +322,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
             IsTransitioning = false;
             TransitionAnimationType = null;
         }
-        
+
         internal void BeforeReleaseAndForget()
         {
             var _ = _lifecycleEvents.ExecuteLifecycleEventsSequentially(x => x.Cleanup());

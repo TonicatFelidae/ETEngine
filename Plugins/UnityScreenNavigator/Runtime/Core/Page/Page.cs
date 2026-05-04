@@ -12,11 +12,12 @@ using System.Threading.Tasks;
 namespace UnityScreenNavigator.Runtime.Core.Page
 {
     [DisallowMultipleComponent]
-    public class Page : MonoBehaviour, IPageLifecycleEvent
+    public class Page : MonoBehaviour, IPageLifecycleEvent, IUIController
     {
         [SerializeField] private bool _usePrefabNameAsIdentifier = true;
 
-        [SerializeField] [EnabledIf(nameof(_usePrefabNameAsIdentifier), false)]
+        [SerializeField]
+        [EnabledIf(nameof(_usePrefabNameAsIdentifier), false)]
         private string _identifier;
 
         [SerializeField] private int _renderingOrder;
@@ -165,6 +166,11 @@ namespace UnityScreenNavigator.Runtime.Core.Page
             yield break;
         }
 #endif
+        //Will should be called by other scripts to update
+        public virtual void UpdateNewState()
+        {
+
+        }
 
         public void AddLifecycleEvent(IPageLifecycleEvent lifecycleEvent, int priority = 0)
         {

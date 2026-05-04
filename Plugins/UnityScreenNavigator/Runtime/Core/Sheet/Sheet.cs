@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace UnityScreenNavigator.Runtime.Core.Sheet
 {
     [DisallowMultipleComponent]
-    public class Sheet : MonoBehaviour, ISheetLifecycleEvent
+    public class Sheet : MonoBehaviour, ISheetLifecycleEvent, IUIController
     {
         [SerializeField] private string _identifier;
 
@@ -37,7 +37,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         }
 
         private readonly CompositeLifecycleEvent<ISheetLifecycleEvent> _lifecycleEvents = new();
-        
+
         public string Identifier
         {
             get => _identifier;
@@ -112,7 +112,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         public virtual void UpdateNewState()
         {
         }
-        
+
         public virtual void DidExit()
         {
         }
