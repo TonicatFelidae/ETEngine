@@ -9,12 +9,18 @@ public class PortrailCameraGeneral : MonoBehaviour
 
     private Camera _camera;
     private float _initialOrthographicSize;
-    private float _initialAspectRatio;  
+    private float _initialAspectRatio;
     private float _targetWidth;
 
     private void Start()
     {
         Resize();
+    }
+
+    private void OnValidate()
+    {
+        if (targetObject != null)
+            Resize();
     }
     private float CalculateTargetWidth()
     {
@@ -46,7 +52,7 @@ public class PortrailCameraGeneral : MonoBehaviour
             float targetWidth = CalculateTargetWidth();
 
             float newOrthographicSize = targetWidth * 0.5f / _initialAspectRatio;
-            Debug.Log("[PortrailCameraGeneral] new OrthographicSize: "+ newOrthographicSize);
+            Debug.Log("[PortrailCameraGeneral] new OrthographicSize: " + newOrthographicSize);
             _camera.orthographicSize = newOrthographicSize;
         }
     }
