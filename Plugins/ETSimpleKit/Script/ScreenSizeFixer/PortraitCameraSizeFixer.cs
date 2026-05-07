@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// PortrailCameraGeneral resize camera witdh to fix the 2D gameobject witdh
+/// PortraitCameraSizeFixer resize camera width to fix the 2D gameobject width
 /// </summary>
-public class PortrailCameraGeneral : MonoBehaviour
+public class PortraitCameraSizeFixer : MonoBehaviour
 {
     public Transform targetObject; // Assign your game object here
 
