@@ -11,23 +11,50 @@ namespace ETEngine
         public static bool mainCasvasForAllInstalled = false;
         public static void Install(IContainerBuilder builder, ProjectInstallerSetup projectInstallerSetup)
         {
+            Install(builder, (IObjectResolver)null, projectInstallerSetup);
+        }
+
+        public static void Install(IContainerBuilder builder, LifetimeScope currentScope, ProjectInstallerSetup projectInstallerSetup)
+        {
+            var objectResolver = currentScope?.Container != null ? currentScope?.Container : currentScope?.Parent?.Container;
+            Install(builder, objectResolver, projectInstallerSetup);
+        }
+
+        public static void Install(IContainerBuilder builder, IObjectResolver objectResolver, ProjectInstallerSetup projectInstallerSetup)
+        {
+            builder.Register<PageFactory>(Lifetime.Scoped);
+            builder.Register<PopupFactory>(Lifetime.Scoped);
             if (projectInstallerSetup.useMainCanvasForAll)
             {
                 if (!mainCasvasForAllInstalled)
                 {
                     builder.RegisterComponentInNewPrefab(projectInstallerSetup.mainCanvas, Lifetime.Singleton).DontDestroyOnLoad();
                     mainCasvasForAllInstalled = true;
+                    Debug.Log("UIManagerInstaller: Registered maincanvas for all");
                 }
             }
             else
             {
-                builder.RegisterComponentInNewPrefab(projectInstallerSetup.mainCanvas, Lifetime.Scoped);
+                if (objectResolver != null && objectResolver.TryResolve<MainCanvas>(out _))
+                {
 
+                }
+                else
+                {
+
+                    builder.RegisterComponentInNewPrefab(projectInstallerSetup.mainCanvas, Lifetime.Scoped);
+                    Debug.Log("UIManagerInstaller: Registered a local maincanvas");
+                }
             }
-            builder.Register<PageFactory>(Lifetime.Scoped);
-            builder.Register<PopupFactory>(Lifetime.Scoped);
             builder.Register<IUIManager, UIManager>(Lifetime.Scoped);
-            builder.RegisterEntryPoint<UIBootstrap>();
+            builder.RegisterBuildCallback(container =>
+            {
+                var serviceA = container.Resolve<PageFactory>();
+                var serviceB = container.Resolve<PopupFactory>();
+                var mainCanvas = container.Resolve<MainCanvas>();
+                mainCanvas.ReInitiation(serviceA, serviceB);
+                // ...
+            });
         }
     }
 }
