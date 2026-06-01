@@ -11,16 +11,16 @@ namespace ETEngine
         public static bool mainCasvasForAllInstalled = false;
         public static void Install(IContainerBuilder builder, ProjectInstallerSetup projectInstallerSetup)
         {
-            Install(builder, (IObjectResolver)null, projectInstallerSetup);
+            Install(builder, (IObjectResolver)null, projectInstallerSetup, false);
         }
 
         public static void Install(IContainerBuilder builder, LifetimeScope currentScope, ProjectInstallerSetup projectInstallerSetup)
         {
             var objectResolver = currentScope?.Container != null ? currentScope?.Container : currentScope?.Parent?.Container;
-            Install(builder, objectResolver, projectInstallerSetup);
+            Install(builder, objectResolver, projectInstallerSetup, currentScope.IsRoot);
         }
 
-        public static void Install(IContainerBuilder builder, IObjectResolver objectResolver, ProjectInstallerSetup projectInstallerSetup)
+        public static void Install(IContainerBuilder builder, IObjectResolver objectResolver, ProjectInstallerSetup projectInstallerSetup, bool isRoot)
         {
             builder.Register<PageFactory>(Lifetime.Scoped);
             builder.Register<PopupFactory>(Lifetime.Scoped);
@@ -35,7 +35,8 @@ namespace ETEngine
             }
             else
             {
-                if (objectResolver != null && objectResolver.TryResolve<MainCanvas>(out _))
+                if ((objectResolver != null && objectResolver.TryResolve<MainCanvas>(out _))
+                || isRoot)
                 {
 
                 }
