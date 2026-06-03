@@ -22,7 +22,6 @@ namespace Game.UI
         public BottomNavigationBar _bottomNavigationBar;
         public bool registerSheetsOnStart = true;
         public int defaultEnableSheetIndex = 0;
-        public bool resetToDefaultSheetOnEnable = true;
 
 
         public async void Start()
@@ -62,13 +61,6 @@ namespace Game.UI
         public virtual async UniTask OnStart()
         {
 
-        }
-        private void OnEnable()
-        {
-            if (resetToDefaultSheetOnEnable)
-            {
-                EnableDefaultSheet().Forget();
-            }
         }
     }
 }
