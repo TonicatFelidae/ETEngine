@@ -18,9 +18,12 @@ namespace Game.UI
         [Inject] IUIManager _uIManager;
         [Inject] ISignalBus _signalBus;
         [SerializeField] private SheetContainer sheetContainer;
-        [SerializeField] private Page[] sheetScreens;
+        [SerializeField] private Sheet[] sheetScreens;
         public BottomNavigationBar _bottomNavigationBar;
         public bool registerSheetsOnStart = true;
+        public int defaultEnableSheetIndex = 0;
+        public bool resetToDefaultSheetOnEnable = true;
+
 
         public async void Start()
         {
@@ -31,15 +34,41 @@ namespace Game.UI
                 {
                     var screen = sheetScreens[i];
                     string screenID = screen.Identifier;
+                    if (string.IsNullOrEmpty(screenID))
+                    {
+                        screenID = sheetScreens[i].name;
+                    }
+                    Debug.Log($"[SheetPage] Registering sheet: {screenID}");
                     await sheetContainer.Register(screenID, null, true, screenID);
                 }
+                await EnableDefaultSheet();
+
             }
-            OnStart();
+            await OnStart();
 
         }
-        public virtual async void OnStart()
+        private async UniTask EnableDefaultSheet()
+        {
+            if (sheetScreens.Length > 0)
+            {
+                string defaultSheetID = sheetScreens[defaultEnableSheetIndex].Identifier;
+                if (string.IsNullOrEmpty(defaultSheetID))
+                {
+                    defaultSheetID = sheetScreens[defaultEnableSheetIndex].name;
+                }
+                await sheetContainer.Show(defaultSheetID, true);
+            }
+        }
+        public virtual async UniTask OnStart()
         {
 
+        }
+        private void OnEnable()
+        {
+            if (resetToDefaultSheetOnEnable)
+            {
+                EnableDefaultSheet().Forget();
+            }
         }
     }
 }

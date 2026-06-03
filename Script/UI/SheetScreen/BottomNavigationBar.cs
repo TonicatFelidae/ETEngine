@@ -20,6 +20,7 @@ public class BottomNavigationBar : MonoBehaviour
     [Header("Bottom Navigation Bar")]
     [SerializeField] BottomNavButtonBase[] _buttons;
     public string currentViewID = "None";
+    public string sheetContainerID = "SheetContainer";
     public UnityAction<string> OnTouchNavButton { get; set; }
 
     private void Start()
@@ -39,6 +40,10 @@ public class BottomNavigationBar : MonoBehaviour
     }
     private void SetupButtons()
     {
+        if (_buttons == null || _buttons.Length == 0)
+        {
+            _buttons = GetComponentsInChildren<BottomNavButtonBase>(true);
+        }
         foreach (var btn in _buttons)
         {
             btn.SetOnClick(() => TouchNavButton(btn.viewID));
@@ -70,7 +75,7 @@ public class BottomNavigationBar : MonoBehaviour
             EnableButtons(false);
             UpdateState();
             InteracEffect();
-            await (_UIManager.GetSheetContainer<SheetPage>()).Show(viewID, true);
+            await (_UIManager.GetSheetContainer<SheetPage>(sheetContainerID)).Show(viewID, true);
             EnableButtons(true);
         }
     }
