@@ -49,8 +49,9 @@ public class BottomNavigationBar : MonoBehaviour
             btn.SetOnClick(() => TouchNavButton(btn.viewID));
         }
     }
-    protected virtual void UpdateState()
+    public virtual void UpdateState()
     {
+        SetupButtons();
         foreach (var btn in _buttons)
         {
             btn.SetActive(btn.viewID == currentViewID);
@@ -74,7 +75,7 @@ public class BottomNavigationBar : MonoBehaviour
             OnTouchNavButton?.Invoke(viewID);
             EnableButtons(false);
             UpdateState();
-            InteracEffect();
+            //InteracEffect();
             await (_UIManager.GetSheetContainer<SheetPage>(sheetContainerID)).Show(viewID, true);
             EnableButtons(true);
         }

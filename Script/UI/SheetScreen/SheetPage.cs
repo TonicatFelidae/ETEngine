@@ -55,7 +55,7 @@ namespace Game.UI
                 {
                     defaultSheetID = sheetScreens[defaultEnableSheetIndex].name;
                 }
-                await sheetContainer.Show(defaultSheetID, true);
+                _bottomNavigationBar.TouchNavButton(defaultSheetID);
             }
         }
         public virtual async UniTask OnStart()
