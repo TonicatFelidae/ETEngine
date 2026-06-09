@@ -11,7 +11,7 @@ namespace ETEngine.Editor
             string baseName = Path.GetFileNameWithoutExtension(pathName);
             string className = baseName + ProjectBuilderConstants.SuffixPage;
             Directory.CreateDirectory(ProjectBuilderConstants.DirUI);
-            pathName = Path.Combine(ProjectBuilderConstants.DirUI, className + ".cs");
+            pathName = $"{ProjectBuilderConstants.DirUI}/{className}.cs";
             string content =
 $@"using UnityEngine;
 using UnityScreenNavigator.Runtime.Core.Page;

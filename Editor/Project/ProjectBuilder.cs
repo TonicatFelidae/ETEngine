@@ -101,7 +101,7 @@ namespace ETEngine.Editor
         private static void StartNameEdit<T>(string defaultFileName) where T : EndNameEditAction
         {
             string path = GetSelectedPathOrFallback();
-            string filePath = Path.Combine(path, defaultFileName);
+            string filePath = $"{path}/{defaultFileName}".Replace("\\", "/");
             ProjectWindowUtil.StartNameEditingIfProjectWindowExists(
                 0,
                 ScriptableObject.CreateInstance<T>(),

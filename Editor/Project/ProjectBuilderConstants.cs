@@ -12,7 +12,7 @@ namespace ETEngine.Editor
 
         // ── Class name suffixes ───────────────────────────────────────────
         public const string SuffixGeneralObject = "GeneralObject";
-        public const string SuffixPage = "Page";
+        public const string SuffixPage = "Screen";
         public const string SuffixPopup = "Popup";
         public const string SuffixSheet = "Sheet";
         public const string SuffixInstaller = "Installer";
