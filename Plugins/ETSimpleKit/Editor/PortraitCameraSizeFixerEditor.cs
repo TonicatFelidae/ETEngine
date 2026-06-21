@@ -27,6 +27,19 @@ public class PortraitCameraSizeFixerEditor : Editor
                 // Ensure SpriteRenderer exists and make it invisible (alpha = 0)
                 SpriteRenderer sr = targetGo.GetComponent<SpriteRenderer>();
                 if (sr == null) sr = targetGo.AddComponent<SpriteRenderer>();
+                // Try to assign Unity's default UI square sprite
+                try
+                {
+                    Sprite defaultSprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+                    if (defaultSprite != null)
+                    {
+                        sr.sprite = defaultSprite;
+                    }
+                }
+                catch
+                {
+                    // ignore if builtin resource not found on this Unity version
+                }
                 sr.color = new Color(1f, 1f, 1f, 0f);
                 // Place as first child under World (sibling index 0)
                 if (targetGo.transform.parent != null)
