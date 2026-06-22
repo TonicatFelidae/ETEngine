@@ -7,7 +7,8 @@
         "VContainer",
         "ETResourceLoader",
         "Unity.Services.Analytics",
-        "Unity.Services.Core"
+        "Unity.Services.Core",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
