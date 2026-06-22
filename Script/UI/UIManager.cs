@@ -188,6 +188,10 @@ namespace ETEngine
         }
 
         public void ShowLoadingPage(string messege = null) => _mainCanvas.loadingPage.Show(messege);
+        public void PushToast(string message, float duration = 1f)
+        {
+            _mainCanvas.toastManager.PushNoti(message, duration);
+        }
 
         public void HideLoadingPage() => _mainCanvas.loadingPage.Hide();
 

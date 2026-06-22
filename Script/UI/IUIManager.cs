@@ -55,6 +55,7 @@ namespace ETEngine
         #endregion
         #region Feature
         void ShowLoadingPage(string messege = null);
+        void PushToast(string message, float duration = 1f);
         void HideLoadingPage();
         #endregion
 
