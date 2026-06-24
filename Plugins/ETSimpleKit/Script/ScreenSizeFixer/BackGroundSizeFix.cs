@@ -2,7 +2,6 @@ using ET.SupportKit;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(RectTransform))]
@@ -27,7 +26,12 @@ public class BackgroundSizeFix : MonoBehaviour
     private void Start()
     {
         float ratio = width / height;
+        if (_image == null || _image.sprite == null)
+        {
+            return;
+        }
         float spriteRatio = _image.sprite.bounds.size.x / _image.sprite.bounds.size.y;
+        if (spriteRatio == 0) return;
         switch (fixType)
         {
             case FixType.FixRatioBaseOnWidth:
