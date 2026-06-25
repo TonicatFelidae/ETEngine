@@ -1,0 +1,175 @@
+using System.Threading.Tasks;
+using UnityEngine;
+using VContainer;
+using System;
+using Game;
+using System.Collections.Generic;
+using ProtectRicePlant.Systems;
+
+namespace ETSimpleKit.Services
+{
+    /// <summary>
+    /// Service for saving/loading player data.
+    /// Splits data between server (progression) and local storage (gameplay runtime state).
+    /// </summary>
+    public class SaveLoadService
+    {
+        private float _autoSaveInterval = 30f;
+        private float _timeSinceLastSave = 0f;
+        private bool _isSaving = false;
+
+        /// <summary>
+        /// True when the server hard-banned this device at loadFullGameState
+        /// (country / IP / user ban). When set, game data was NOT merged and
+        /// startup must abort with a ban popup.
+        /// </summary>
+        public bool IsBanned { get; private set; }
+        private const float SERVER_SAVE_COOLDOWN = 10f;
+        private float _lastServerSaveTime = float.NegativeInfinity;
+        [Inject] private readonly IGameServerService serverService;
+        [Inject] private readonly LocalStorageService localStorageService;
+        [Inject] private readonly GameStateData _gameStateData;
+        [Inject] private readonly DataDebug _dataDebug;
+        [Inject] private readonly GameData _gameData;
+        public async Task SaveGameStateAsync()
+        {
+            _isSaving = true;
+            try
+            {
+                var dataToSave = _gameStateData;
+
+                Debug.Log($"[SaveLoadService] SaveGameStateAsync: missionProgress count = {dataToSave.missionProgress?.Count ?? 0}, plant count = {(dataToSave.plant != null ? 1 : 0)}");
+
+                // Save local gameplay state to device
+                localStorageService.SaveLocalState(
+                    dataToSave.plant,
+                    dataToSave.enemies,
+                    dataToSave.activeDefenseItems,
+                    dataToSave.droppedItems,
+                    dataToSave.plantHistoryData
+                );
+
+                // Save server data to server (fire-and-forget so it doesn't block screen transitions)
+                float now = Time.realtimeSinceStartup;
+                if (now - _lastServerSaveTime >= SERVER_SAVE_COOLDOWN)
+                {
+                    _lastServerSaveTime = now;
+                    _ = serverService.SaveFullGameStateAsync(dataToSave).ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            Debug.LogWarning($"[SaveLoadService] Server save failed: {t.Exception?.InnerException?.Message}");
+                        else
+                            Debug.Log($"[SaveLoadService] Game saved successfully");
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+                else
+                {
+                    Debug.Log($"[SaveLoadService] Server save skipped (cooldown), local saved");
+                }
+            }
+            finally
+            {
+                _isSaving = false;
+            }
+        }
+
+        /// <summary>
+        /// Synchronous local-only save for use during quit/destroy.
+        /// Skips the async server save to avoid deadlocks.
+        /// </summary>
+        public void SaveLocalStateOnly()
+        {
+            localStorageService.SaveLocalState(
+                _gameStateData.plant,
+                _gameStateData.enemies,
+                _gameStateData.activeDefenseItems,
+                _gameStateData.droppedItems,
+                _gameStateData.plantHistoryData
+            );
+        }
+
+        /// <summary>
+        /// Synchronous session timestamp save for use during quit/destroy.
+        /// Updates lastSessionTimestamp to now so offline progress is accurate on next launch.
+        /// </summary>
+        public void SaveSessionTimestampOnQuit()
+        {
+            var now = JstTime.NowJst().ToString("o");
+            _gameStateData.lastSessionTimestamp = now;
+            // Sync for MockServerService (file I/O completes immediately).
+            // For HttpServerService the PUT may not complete before exit, but
+            // the real server already receives the timestamp during auto-saves;
+            // this call primarily keeps mock-server/session.json accurate for
+            // the Debug Commands "Time since last session" display.
+            _ = serverService.SaveSessionDataAsync(now, _gameStateData.daysElapsed);
+            Debug.Log($"[SaveLoadService] Session timestamp saved on quit: {now}");
+        }
+
+        // Only load full game data one time at startup
+        public async Task LoadGameStateAsync()
+        {
+            // Load server data
+            GameStateData gameState = await serverService.LoadFullGameStateAsync();
+
+            // Server hard ban: do NOT merge/import (server sends an empty default
+            // state). Leave local data untouched and let startup abort with a popup.
+            if (gameState.banned)
+            {
+                IsBanned = true;
+                Debug.LogWarning("[Ban] Server hard-banned this device. Aborting game data load.");
+                return;
+            }
+
+            _dataDebug.DebugFirstMissionProgress(gameState); //0 // Load local data and merge
+            var local = localStorageService.LoadLocalState();
+            gameState.plant = local.plants;
+            gameState.enemies = local.enemies;
+            gameState.activeDefenseItems = local.defenseItems;
+            gameState.droppedItems = local.droppedItems;
+            gameState.plantHistoryData = local.plantHistory;
+            // Daily report (退治数) is session-only in production, so this is normally an
+            // empty record. The Mock Data Manager can inject test values into
+            // local-state/killRecord.json to populate the chart for QA. Editor/test-only.
+            gameState.killRecordData = localStorageService.LoadKillRecord();
+
+            if (gameState.activeDecorations == null || gameState.activeDecorations.Count == 0)
+            {
+                Debug.LogWarning("[SaveLoadService] activeDecorations not loaded from server (null or empty). Decoration state may be lost.");
+            }
+
+            _gameStateData.ImportFrom(gameState);// Ensure any new fields are initialized
+            _gameStateData.InitData(_gameData); // Ensure any new fields are initialized with defaults
+            _dataDebug.DebugFirstMissionProgress(gameState); //0
+            Debug.Log($"[SaveLoadService] LoadGameStateAsync: missionProgress count = {gameState.missionProgress?.Count ?? 0}, plant count = {(gameState.plant != null ? 1 : 0)}, activeDecorations = {gameState.activeDecorations?.Count ?? 0}, historyEntries = {gameState.plantHistoryData?.historyEntries?.Count ?? 0}");
+
+        }
+
+        public async Task ClearSaveAsync()
+        {
+            await serverService.ClearAllDataAsync();
+            localStorageService.ClearLocalState();
+            Debug.Log("[SaveLoadService] Save file deleted successfully.");
+        }
+
+        public async Task<bool> SaveExistsAsync()
+        {
+            return await serverService.HasSavedDataAsync();
+        }
+
+        public string GetSaveFilePath()
+        {
+            // For backwards compatibility - returns the default local path
+            return System.IO.Path.Combine(Application.persistentDataPath, "PlayerData.json");
+        }
+        public void AutoSaveUpdate()
+        {
+            _timeSinceLastSave += Time.deltaTime;
+            if (_timeSinceLastSave >= _autoSaveInterval && !_isSaving)
+            {
+                _ = SaveGameStateAsync();
+                _timeSinceLastSave = 0f;
+            }
+        }
+
+    }
+}
