@@ -12,7 +12,8 @@ namespace ETEngine
         public PopupContainer popupContainer;
         public LoadingPageBase loadingPage;
         public Toast toastManager;
-        
+        public Transform overlayContainer;
+
         public void ReInitiation(PageFactory pageFactory, PopupFactory popupFactory)
         {
             pageContainer.Init(pageFactory);
