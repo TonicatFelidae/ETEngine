@@ -39,6 +39,11 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
 
         private readonly Dictionary<string, Popup> _modals = new();
         public int Count => _modals.Count;
+        /// <summary>
+        ///     The top-most (most recently pushed) modal, or null if none.
+        /// </summary>
+        public Popup Current =>
+            _orderedModalIds.Count == 0 ? null : _modals[_orderedModalIds[^1]];
 
         private readonly List<string> _orderedModalIds = new();
 

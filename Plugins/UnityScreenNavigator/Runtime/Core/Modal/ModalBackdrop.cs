@@ -22,7 +22,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         {
             _rectTransform = (RectTransform)transform;
             _canvasGroup = gameObject.GetOrAddComponent<CanvasGroup>();
-            
+
             if (_closeModalWhenClicked)
             {
                 if (!TryGetComponent<Image>(out var image))
@@ -30,7 +30,7 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
                     image = gameObject.AddComponent<Image>();
                     image.color = Color.clear;
                 }
-                
+
                 if (!TryGetComponent<Button>(out var button))
                 {
                     button = gameObject.AddComponent<Button>();
@@ -39,9 +39,12 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
                 button.onClick.AddListener(() =>
                 {
                     var modalContainer = PopupContainer.Of(transform);
-                    if (modalContainer.IsInTransition)
+                    if (modalContainer == null || modalContainer.IsInTransition)
                         return;
-                    modalContainer.Pop(true);
+                    var top = modalContainer.Current;
+                    if (top == null || !top.CanCloseByBackdrop)
+                        return;
+                    top.OnBackdropClicked();
                 });
             }
         }

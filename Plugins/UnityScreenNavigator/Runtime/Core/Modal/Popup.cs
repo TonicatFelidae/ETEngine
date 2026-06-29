@@ -71,6 +71,21 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
         ///     Event when the transition animation progress changes.
         /// </summary>
         public event Action<float> TransitionAnimationProgressChanged;
+        /// <summary>
+        ///     Whether this popup can be closed by tapping the modal backdrop.
+        ///     Override and return false for forced popups (e.g. tutorial steps).
+        /// </summary>
+        public virtual bool CanCloseByBackdrop => true;
+
+        /// <summary>
+        ///     Invoked when the modal backdrop is tapped (only if <see cref="CanCloseByBackdrop" /> is true).
+        ///     Default behaviour is a plain pop. Override (e.g. ConfirmPopup) to run cancel logic instead.
+        /// </summary>
+        public virtual void OnBackdropClicked()
+        {
+            PopupContainer.Of(transform)?.Pop(true);
+        }
+
 
 #if USN_USE_ASYNC_METHODS
         public virtual Task Initialize()
