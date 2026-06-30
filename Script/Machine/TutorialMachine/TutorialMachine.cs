@@ -164,6 +164,11 @@ namespace ETEngine
                 currentStep.target.HighlightTarget();
             }
 
+            if (currentStep.showStandout && currentStep.target != null)
+            {
+                currentStep.target.StandOutTarget();
+            }
+
             if (currentStep.showText && !string.IsNullOrWhiteSpace(currentStep.instructionText))
             {
                 Debug.Log($"[TutorialMachine] {currentStep.instructionText}");
@@ -240,6 +245,7 @@ namespace ETEngine
     {
         public TutorialTarget target;
         public bool showHighlight;
+        public bool showStandout;
         public bool showText;
         public string instructionText;
         public bool showPopup;

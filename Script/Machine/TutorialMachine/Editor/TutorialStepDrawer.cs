@@ -14,6 +14,7 @@ public class TutorialStepDrawer : PropertyDrawer
 
         SerializedProperty targetProp = property.FindPropertyRelative("target");
         SerializedProperty showHighlightProp = property.FindPropertyRelative("showHighlight");
+        SerializedProperty showStandoutProp = property.FindPropertyRelative("showStandout");
         SerializedProperty showTextProp = property.FindPropertyRelative("showText");
         SerializedProperty instructionTextProp = property.FindPropertyRelative("instructionText");
         SerializedProperty showPopupProp = property.FindPropertyRelative("showPopup");
@@ -23,6 +24,7 @@ public class TutorialStepDrawer : PropertyDrawer
         DrawField(ref rect, targetProp, spacing);
 
         DrawField(ref rect, showHighlightProp, spacing);
+        DrawField(ref rect, showStandoutProp, spacing);
         DrawField(ref rect, showTextProp, spacing);
 
         if (showTextProp != null && showTextProp.boolValue)
@@ -50,6 +52,7 @@ public class TutorialStepDrawer : PropertyDrawer
         lines++; // target
 
         lines++; // showHighlight
+        lines++; // showStandout
         lines++; // showText
 
         SerializedProperty showTextProp = property.FindPropertyRelative("showText");
