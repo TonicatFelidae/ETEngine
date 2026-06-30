@@ -2,20 +2,10 @@ using UnityEngine;
 
 namespace Game
 {
-    public class TutorialTarget : MonoBehaviour
+    public abstract class TutorialTarget : MonoBehaviour
     {
-        public virtual void HighlightTarget()
-        {
-        }
+        public abstract void HighlightTarget();
 
-        public virtual void StepFeedback()
-        {
-        }
-
-        // Keep typo-compatible API to avoid breaking old call sites.
-        public virtual void SetpFeedback()
-        {
-            StepFeedback();
-        }
+        public abstract void StepFeedback();
     }
 }
