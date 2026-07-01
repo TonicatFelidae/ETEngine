@@ -246,6 +246,7 @@ namespace ETEngine
         public TutorialTarget target;
         public bool showHighlight;
         public bool showStandout;
+        public bool showSpotLight;
         public bool showText;
         public string instructionText;
         public bool showPopup;

@@ -6,6 +6,7 @@ namespace Game
     {
         public abstract void HighlightTarget();
         public abstract void StandOutTarget();
+        public abstract void SpotlightTarget();
         public abstract void StepFeedback();
     }
 }
