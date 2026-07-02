@@ -8,5 +8,7 @@ namespace Game
         public abstract void StandOutTarget();
         public abstract void SpotlightTarget();
         public abstract void StepFeedback();
+
+        public abstract void DisableTutorial();
     }
 }

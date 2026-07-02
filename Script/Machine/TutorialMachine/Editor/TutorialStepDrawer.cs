@@ -15,16 +15,20 @@ public class TutorialStepDrawer : PropertyDrawer
         SerializedProperty targetProp = property.FindPropertyRelative("target");
         SerializedProperty showHighlightProp = property.FindPropertyRelative("showHighlight");
         SerializedProperty showStandoutProp = property.FindPropertyRelative("showStandout");
+        SerializedProperty showSpotLightProp = property.FindPropertyRelative("showSpotLight");
         SerializedProperty showTextProp = property.FindPropertyRelative("showText");
         SerializedProperty instructionTextProp = property.FindPropertyRelative("instructionText");
         SerializedProperty showPopupProp = property.FindPropertyRelative("showPopup");
         SerializedProperty popupPrefabProp = property.FindPropertyRelative("pp_popup");
         SerializedProperty popupOffsetProp = property.FindPropertyRelative("popupOffset");
+        SerializedProperty onCompletedProp = property.FindPropertyRelative("onCompleted");
+        SerializedProperty onCompletedFeedbackProp = property.FindPropertyRelative("onCompletedFeedback");
 
         DrawField(ref rect, targetProp, spacing);
 
         DrawField(ref rect, showHighlightProp, spacing);
         DrawField(ref rect, showStandoutProp, spacing);
+        DrawField(ref rect, showSpotLightProp, spacing);
         DrawField(ref rect, showTextProp, spacing);
 
         if (showTextProp != null && showTextProp.boolValue)
@@ -40,36 +44,51 @@ public class TutorialStepDrawer : PropertyDrawer
             DrawField(ref rect, popupOffsetProp, spacing);
         }
 
+        DrawField(ref rect, onCompletedProp, spacing);
+
+        if (onCompletedProp != null && (OnTutorialStepComplete)onCompletedProp.enumValueIndex == OnTutorialStepComplete.Feedback)
+        {
+            DrawField(ref rect, onCompletedFeedbackProp, spacing);
+        }
+
         EditorGUI.EndProperty();
     }
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        float line = EditorGUIUtility.singleLineHeight;
         float spacing = EditorGUIUtility.standardVerticalSpacing;
-        int lines = 0;
+        float height = 0f;
 
-        lines++; // target
-
-        lines++; // showHighlight
-        lines++; // showStandout
-        lines++; // showText
+        height += GetFieldHeight(property.FindPropertyRelative("target"), spacing);
+        height += GetFieldHeight(property.FindPropertyRelative("showHighlight"), spacing);
+        height += GetFieldHeight(property.FindPropertyRelative("showStandout"), spacing);
+        height += GetFieldHeight(property.FindPropertyRelative("showSpotLight"), spacing);
+        height += GetFieldHeight(property.FindPropertyRelative("showText"), spacing);
 
         SerializedProperty showTextProp = property.FindPropertyRelative("showText");
         if (showTextProp != null && showTextProp.boolValue)
         {
-            lines++; // instructionText
+            height += GetFieldHeight(property.FindPropertyRelative("instructionText"), spacing);
         }
 
-        lines++; // showPopup
+        height += GetFieldHeight(property.FindPropertyRelative("showPopup"), spacing);
 
         SerializedProperty showPopupProp = property.FindPropertyRelative("showPopup");
         if (showPopupProp != null && showPopupProp.boolValue)
         {
-            lines += 2; // pp_popup + popupOffset
+            height += GetFieldHeight(property.FindPropertyRelative("pp_popup"), spacing);
+            height += GetFieldHeight(property.FindPropertyRelative("popupOffset"), spacing);
         }
 
-        return (lines * line) + ((lines - 1) * spacing);
+        SerializedProperty onCompletedProp = property.FindPropertyRelative("onCompleted");
+        height += GetFieldHeight(onCompletedProp, spacing);
+
+        if (onCompletedProp != null && (OnTutorialStepComplete)onCompletedProp.enumValueIndex == OnTutorialStepComplete.Feedback)
+        {
+            height += GetFieldHeight(property.FindPropertyRelative("onCompletedFeedback"), spacing);
+        }
+
+        return Mathf.Max(0f, height - spacing);
     }
 
     private static void DrawField(ref Rect rect, SerializedProperty prop, float spacing)
@@ -81,5 +100,15 @@ public class TutorialStepDrawer : PropertyDrawer
 
         EditorGUI.PropertyField(rect, prop, true);
         rect.y += EditorGUI.GetPropertyHeight(prop, true) + spacing;
+    }
+
+    private static float GetFieldHeight(SerializedProperty prop, float spacing)
+    {
+        if (prop == null)
+        {
+            return 0f;
+        }
+
+        return EditorGUI.GetPropertyHeight(prop, true) + spacing;
     }
 }

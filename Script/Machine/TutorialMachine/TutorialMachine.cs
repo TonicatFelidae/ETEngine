@@ -17,7 +17,7 @@ namespace ETEngine
         private int _currentStepIndex = -1;
         private GameObject _activePopup;
         public UnityEvent onTutorialCompleted;
-
+        public void Init() => Init(true, false, false);
         public void Init(bool isFirstTime, bool skipTutorial, bool ignoreTutorialFeedback = false)
         {
             _isIgnoreTutorialFeedback = ignoreTutorialFeedback;
@@ -53,7 +53,7 @@ namespace ETEngine
             }
             else
             {
-                OnStepComplete(OnTutorialStepComplete.Disable);
+                OnStepComplete(OnTutorialStepComplete.DisableAllTutorials);
                 _isTutorialCompleted = true;
                 gameObject.SetActive(false);
             }
@@ -66,11 +66,10 @@ namespace ETEngine
                 return;
             }
 
-            // Logic to move to the next tutorial step
             if (_currentStepIndex >= 0 && _currentStepIndex < tutorialSteps.Length)
             {
-                OnStepComplete(OnTutorialStepComplete.Feedback);
-                OnStepComplete(OnTutorialStepComplete.Disable);
+                var currentStep = tutorialSteps[_currentStepIndex];
+                OnStepComplete(currentStep.onCompleted);
             }
 
             _currentStepIndex++;
@@ -92,13 +91,9 @@ namespace ETEngine
             // If we are not currently running a step (index is out of range)
             if (_currentStepIndex < 0 || _currentStepIndex >= tutorialSteps.Length)
             {
-                if (action == OnTutorialStepComplete.Disable)
+                if (action == OnTutorialStepComplete.DisableAllTutorials)
                 {
                     DisableAllSteps();
-                }
-                else if (action == OnTutorialStepComplete.Destroy)
-                {
-                    DestroyAllSteps();
                 }
                 return;
             }
@@ -107,24 +102,17 @@ namespace ETEngine
 
             switch (action)
             {
-                case OnTutorialStepComplete.Disable:
-                    // Logic to disable the current tutorial step
+                case OnTutorialStepComplete.DisableTutorialOnTarget:
                     if (currentStep.target != null)
                     {
-                        currentStep.target.gameObject.SetActive(false);
+                        currentStep.target.DisableTutorial();
                     }
                     ClearActivePopup();
                     break;
-                case OnTutorialStepComplete.Destroy:
-                    // Logic to destroy the current tutorial step
-                    if (currentStep.target != null)
-                    {
-                        Destroy(currentStep.target.gameObject);
-                    }
-                    ClearActivePopup();
+                case OnTutorialStepComplete.DisableAllTutorials:
+                    DisableAllSteps();
                     break;
                 case OnTutorialStepComplete.Feedback:
-                    // Logic to provide feedback for the current tutorial step
                     if (!_isIgnoreTutorialFeedback && currentStep.target != null)
                     {
                         currentStep.target.StepFeedback();
@@ -134,6 +122,8 @@ namespace ETEngine
                             Debug.Log($"[TutorialMachine] Step {_currentStepIndex} feedback: {currentStep.instructionText}");
                         }
                     }
+
+                    currentStep.onCompletedFeedback?.Invoke();
                     break;
                 default:
                     break;
@@ -147,15 +137,6 @@ namespace ETEngine
                 return;
             }
 
-            // Activate the current step's target, deactivate others
-            for (int i = 0; i < tutorialSteps.Length; i++)
-            {
-                var step = tutorialSteps[i];
-                if (step.target != null)
-                {
-                    step.target.gameObject.SetActive(i == index);
-                }
-            }
 
             var currentStep = tutorialSteps[index];
 
@@ -194,21 +175,7 @@ namespace ETEngine
             {
                 if (step.target != null)
                 {
-                    step.target.gameObject.SetActive(false);
-                }
-            }
-
-            ClearActivePopup();
-        }
-
-        private void DestroyAllSteps()
-        {
-            if (tutorialSteps == null) return;
-            foreach (var step in tutorialSteps)
-            {
-                if (step.target != null)
-                {
-                    Destroy(step.target.gameObject);
+                    step.target.DisableTutorial();
                 }
             }
 
@@ -252,12 +219,15 @@ namespace ETEngine
         public bool showPopup;
         public GameObject pp_popup;
         public Vector3 popupOffset;
+        public OnTutorialStepComplete onCompleted;
+        public UnityEvent onCompletedFeedback;
     }
 
     public enum OnTutorialStepComplete
     {
-        Disable,
-        Destroy,
+        None,
+        DisableTutorialOnTarget,
+        DisableAllTutorials,
         Feedback,
     }
 }
