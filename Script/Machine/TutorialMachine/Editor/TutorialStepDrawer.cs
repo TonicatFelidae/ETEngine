@@ -21,7 +21,10 @@ public class TutorialStepDrawer : PropertyDrawer
         SerializedProperty instructionTextProp = property.FindPropertyRelative("instructionText");
         SerializedProperty showPopupProp = property.FindPropertyRelative("showPopup");
         SerializedProperty popupPrefabProp = property.FindPropertyRelative("pp_popup");
+        SerializedProperty showOverlayProp = property.FindPropertyRelative("showOverlay");
+        SerializedProperty overlayProp = property.FindPropertyRelative("overlay");
         SerializedProperty popupOffsetProp = property.FindPropertyRelative("popupOffset");
+        SerializedProperty nextStepTriggerTypeProp = property.FindPropertyRelative("nextStepTriggerType");
         SerializedProperty onCompletedProp = property.FindPropertyRelative("onCompleted");
         SerializedProperty onCompletedFeedbackProp = property.FindPropertyRelative("onCompletedFeedback");
 
@@ -45,6 +48,14 @@ public class TutorialStepDrawer : PropertyDrawer
             DrawField(ref rect, popupOffsetProp, spacing);
         }
 
+        DrawField(ref rect, showOverlayProp, spacing);
+
+        if (showOverlayProp != null && showOverlayProp.boolValue)
+        {
+            DrawField(ref rect, overlayProp, spacing);
+        }
+
+        DrawField(ref rect, nextStepTriggerTypeProp, spacing);
         DrawField(ref rect, onCompletedProp, spacing);
 
         if (onCompletedProp != null && (OnTutorialStepComplete)onCompletedProp.enumValueIndex == OnTutorialStepComplete.Feedback)
@@ -80,6 +91,16 @@ public class TutorialStepDrawer : PropertyDrawer
             height += GetFieldHeight(property.FindPropertyRelative("pp_popup"), spacing);
             height += GetFieldHeight(property.FindPropertyRelative("popupOffset"), spacing);
         }
+
+        height += GetFieldHeight(property.FindPropertyRelative("showOverlay"), spacing);
+
+        SerializedProperty showOverlayProp = property.FindPropertyRelative("showOverlay");
+        if (showOverlayProp != null && showOverlayProp.boolValue)
+        {
+            height += GetFieldHeight(property.FindPropertyRelative("overlay"), spacing);
+        }
+
+        height += GetFieldHeight(property.FindPropertyRelative("nextStepTriggerType"), spacing);
 
         SerializedProperty onCompletedProp = property.FindPropertyRelative("onCompleted");
         height += GetFieldHeight(onCompletedProp, spacing);

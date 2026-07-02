@@ -1,6 +1,9 @@
 using Game;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
+
 
 namespace ETEngine
 {
@@ -16,11 +19,13 @@ namespace ETEngine
         private bool _isTutorialCompleted = false;
         private int _currentStepIndex = -1;
         private GameObject _activePopup;
+        private NextStepTriggerType _nextStepTriggerType;
         public UnityEvent onTutorialCompleted;
         public void Init() => Init(true, false, false);
         public void Init(bool isFirstTime, bool skipTutorial, bool ignoreTutorialFeedback = false)
         {
             _isIgnoreTutorialFeedback = ignoreTutorialFeedback;
+            CleanUpCurrentStepListeners();
 
             if (autoFindAllTargetsOnInit)
             {
@@ -29,6 +34,7 @@ namespace ETEngine
             if (skipTutorial)
             {
                 // Logic to skip the tutorial
+                CleanUpCurrentStepListeners();
                 DisableAllSteps();
                 ClearActivePopup();
                 _isTutorialCompleted = true;
@@ -66,7 +72,9 @@ namespace ETEngine
                 return;
             }
 
-            if (_currentStepIndex >= 0 && _currentStepIndex < tutorialSteps.Length)
+            CleanUpCurrentStepListeners();
+
+            if (_currentStepIndex >= 0)
             {
                 var currentStep = tutorialSteps[_currentStepIndex];
                 OnStepComplete(currentStep.onCompleted);
@@ -99,6 +107,7 @@ namespace ETEngine
             }
 
             var currentStep = tutorialSteps[_currentStepIndex];
+            DisableStepOverlay(currentStep);
 
             switch (action)
             {
@@ -155,6 +164,8 @@ namespace ETEngine
                 Debug.Log($"[TutorialMachine] {currentStep.instructionText}");
             }
 
+            EnableStepOverlay(currentStep);
+
             ClearActivePopup();
             if (currentStep.showPopup && currentStep.pp_popup != null)
             {
@@ -166,6 +177,17 @@ namespace ETEngine
 
                 _activePopup = Instantiate(currentStep.pp_popup, popupPosition, Quaternion.identity, transform);
             }
+
+            _nextStepTriggerType = currentStep.nextStepTriggerType;
+
+            if (_nextStepTriggerType == NextStepTriggerType.TouchTutorialTarget && currentStep.target != null)
+            {
+                var button = currentStep.target.GetComponent<Button>();
+                if (button != null)
+                {
+                    button.onClick.AddListener(OnTargetClicked);
+                }
+            }
         }
 
         private void DisableAllSteps()
@@ -173,6 +195,8 @@ namespace ETEngine
             if (tutorialSteps == null) return;
             foreach (var step in tutorialSteps)
             {
+                DisableStepOverlay(step);
+
                 if (step.target != null)
                 {
                     step.target.DisableTutorial();
@@ -180,6 +204,26 @@ namespace ETEngine
             }
 
             ClearActivePopup();
+        }
+
+        private static void EnableStepOverlay(TutorialStep step)
+        {
+            if (!step.showOverlay || step.overlay == null)
+            {
+                return;
+            }
+
+            step.overlay.SetActive(true);
+        }
+
+        private static void DisableStepOverlay(TutorialStep step)
+        {
+            if (step.overlay == null)
+            {
+                return;
+            }
+
+            step.overlay.SetActive(false);
         }
 
         private void ClearActivePopup()
@@ -200,10 +244,53 @@ namespace ETEngine
                 return;
             }
 
+            CleanUpCurrentStepListeners();
             _isTutorialCompleted = true;
             ClearActivePopup();
             onTutorialCompleted?.Invoke();
-            gameObject.SetActive(false);
+            this.enabled = false;
+        }
+
+        private void Update()
+        {
+            if (_isTutorialCompleted) return;
+
+            if (_nextStepTriggerType == NextStepTriggerType.TouchAnyWhere)
+            {
+                if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+                {
+                    NextStep();
+                }
+            }
+        }
+
+        private void OnTargetClicked()
+        {
+            if (_nextStepTriggerType == NextStepTriggerType.TouchTutorialTarget)
+            {
+                NextStep();
+            }
+        }
+
+        private void CleanUpCurrentStepListeners()
+        {
+            if (_currentStepIndex >= 0 && tutorialSteps != null && _currentStepIndex < tutorialSteps.Length)
+            {
+                var step = tutorialSteps[_currentStepIndex];
+                if (step.target != null)
+                {
+                    var button = step.target.GetComponent<Button>();
+                    if (button != null)
+                    {
+                        button.onClick.RemoveListener(OnTargetClicked);
+                    }
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            CleanUpCurrentStepListeners();
         }
     }
 
@@ -218,9 +305,13 @@ namespace ETEngine
         public string instructionText;
         public bool showPopup;
         public GameObject pp_popup;
+        public bool showOverlay;
+        [FormerlySerializedAs("targetOverlay")]
+        public GameObject overlay;
         public Vector3 popupOffset;
         public OnTutorialStepComplete onCompleted;
         public UnityEvent onCompletedFeedback;
+        public NextStepTriggerType nextStepTriggerType;
     }
 
     public enum OnTutorialStepComplete
@@ -229,5 +320,11 @@ namespace ETEngine
         DisableTutorialOnTarget,
         DisableAllTutorials,
         Feedback,
+    }
+    public enum NextStepTriggerType
+    {
+        None,
+        TouchTutorialTarget,
+        TouchAnyWhere,
     }
 }
