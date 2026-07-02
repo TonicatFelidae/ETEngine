@@ -2,6 +2,7 @@ using ETEngine;
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
 [CustomPropertyDrawer(typeof(TutorialStep))]
 public class TutorialStepDrawer : PropertyDrawer
 {
@@ -112,3 +113,4 @@ public class TutorialStepDrawer : PropertyDrawer
         return EditorGUI.GetPropertyHeight(prop, true) + spacing;
     }
 }
+#endif
