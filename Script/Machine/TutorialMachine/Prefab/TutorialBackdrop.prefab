@@ -54,6 +54,8 @@ MonoBehaviour:
   backdropSortingOrder: 900
   backdropCanvas: {fileID: 5619636109059561081}
   backdropImage: {fileID: 6880489110064776575}
+  _fadeInTime: 1
+  _fadeOutTime: 1
 --- !u!223 &5619636109059561081
 Canvas:
   m_ObjectHideFlags: 0

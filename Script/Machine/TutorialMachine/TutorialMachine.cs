@@ -20,6 +20,7 @@ namespace ETEngine
         private int _currentStepIndex = -1;
         private GameObject _activePopup;
         private NextStepTriggerType _nextStepTriggerType;
+        public UnityEvent onTutorialStepComplete;
         public UnityEvent onTutorialCompleted;
         public void Init() => Init(true, false, false);
         public void Init(bool isFirstTime, bool skipTutorial, bool ignoreTutorialFeedback = false)
@@ -78,6 +79,7 @@ namespace ETEngine
             {
                 var currentStep = tutorialSteps[_currentStepIndex];
                 OnStepComplete(currentStep.onCompleted);
+                onTutorialStepComplete?.Invoke();
             }
 
             _currentStepIndex++;
