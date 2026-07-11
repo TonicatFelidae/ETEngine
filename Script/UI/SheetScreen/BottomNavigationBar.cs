@@ -22,6 +22,7 @@ public class BottomNavigationBar : MonoBehaviour
     public string currentViewID = "None";
     public string sheetContainerID = "SheetContainer";
     public UnityAction<string> OnTouchNavButton { get; set; }
+    public GameObject[] bottomButtonDecorations; // Array to hold references to the decorative elements for each button
 
     private void Start()
     {
@@ -88,5 +89,17 @@ public class BottomNavigationBar : MonoBehaviour
         Vector3 punchScale = new Vector3(0.03f, 0.03f, 0.03f);
         float duration = 0.4f;
         transform.DOPunchScale(punchScale, duration, 2, 0.5f);
+    }
+    public void ShowAllButtons(bool show)
+    {
+        foreach (var btn in _buttons)
+        {
+            btn.gameObject.SetActive(show);
+        }
+        foreach (var deco in bottomButtonDecorations)
+        {
+            deco.gameObject.SetActive(show);
+        }
+
     }
 }

@@ -19,7 +19,7 @@ namespace Game.UI
         [Inject] ISignalBus _signalBus;
         [SerializeField] private SheetContainer sheetContainer;
         [SerializeField] private Sheet[] sheetScreens;
-        public BottomNavigationBar _bottomNavigationBar;
+        public BottomNavigationBar bottomNavigationBar;
         public bool registerSheetsOnStart = true;
         public int defaultEnableSheetIndex = 0;
 
@@ -55,7 +55,7 @@ namespace Game.UI
                 {
                     defaultSheetID = sheetScreens[defaultEnableSheetIndex].name;
                 }
-                _bottomNavigationBar.TouchNavButton(defaultSheetID);
+                bottomNavigationBar.TouchNavButton(defaultSheetID);
             }
         }
         public virtual async UniTask OnStart()
