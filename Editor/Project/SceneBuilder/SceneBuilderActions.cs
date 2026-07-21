@@ -19,6 +19,14 @@ namespace ETEngine.Editor
             Undo.RegisterCreatedObjectUndo(go, "Add GeneralObject");
             Selection.activeGameObject = go;
         }
+
+        public static void AddDevSupport()
+        {
+            var go = new GameObject("DevSupport");
+            go.AddComponent<ET.DevSupport>();
+            Undo.RegisterCreatedObjectUndo(go, "Add DevSupport");
+            Selection.activeGameObject = go;
+        }
     }
 }
 #endif

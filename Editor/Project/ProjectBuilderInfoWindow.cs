@@ -50,6 +50,7 @@ SceneBuilder
 ────────────
  • Add Scene Installer → creates GameObject ""SceneInstaller"" in scene
  • Add General Object  → creates GameObject ""GeneralObject"" in scene
+ • Add Dev Support      → creates GameObject ""DevSupport"" with ET.DevSupport component in scene
 
 Tip
 ───

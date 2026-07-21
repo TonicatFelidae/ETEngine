@@ -41,6 +41,7 @@ namespace ETEngine.Editor
             DrawSectionHeader("SceneBuilder");
             if (GUILayout.Button("Add Scene Installer")) SceneBuilderActions.AddSceneInstaller();
             if (GUILayout.Button("Add General Object")) SceneBuilderActions.AddGeneralObject();
+            if (GUILayout.Button("Add Dev Support")) SceneBuilderActions.AddDevSupport();
         }
 
         private static void DrawSectionHeader(string title)
