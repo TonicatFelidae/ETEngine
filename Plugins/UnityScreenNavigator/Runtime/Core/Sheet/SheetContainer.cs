@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -76,7 +76,14 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         /// <summary>
         ///     True if in transition.
         /// </summary>
-        public bool IsInTransition => _transitionHandler.IsInTransition;
+        public bool IsInTransition
+        {
+            get
+            {
+                Initialize();
+                return _transitionHandler.IsInTransition;
+            }
+        }
 
         /// <summary>
         ///     Registered sheets.
@@ -85,20 +92,41 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
 
         public bool Interactable
         {
-            get => _canvasGroup.interactable;
-            set => _canvasGroup.interactable = value;
+            get
+            {
+                Initialize();
+                return _canvasGroup.interactable;
+            }
+            set
+            {
+                Initialize();
+                _canvasGroup.interactable = value;
+            }
+        }
+
+        private bool _initialized;
+
+        public void Initialize()
+        {
+            if (_initialized) return;
+            _initialized = true;
+
+            if (!Instances.Contains(this))
+                Instances.Add(this);
+
+            _callbackReceivers.AddRange(GetComponents<ISheetContainerCallbackReceiver>());
+
+            if (!string.IsNullOrWhiteSpace(_name) && !InstanceCacheByName.ContainsKey(_name))
+                InstanceCacheByName.Add(_name, this);
+
+            _canvasGroup = gameObject.GetOrAddComponent<CanvasGroup>();
+            _transitionHandler = new ScreenContainerTransitionHandler(this);
+            _lifecycleHandler = new SheetLifecycleHandler((RectTransform)transform, _callbackReceivers);
         }
 
         private void Awake()
         {
-            Instances.Add(this);
-
-            _callbackReceivers.AddRange(GetComponents<ISheetContainerCallbackReceiver>());
-
-            if (!string.IsNullOrWhiteSpace(_name)) InstanceCacheByName.Add(_name, this);
-            _canvasGroup = gameObject.GetOrAddComponent<CanvasGroup>();
-            _transitionHandler = new ScreenContainerTransitionHandler(this);
-            _lifecycleHandler = new SheetLifecycleHandler((RectTransform)transform, _callbackReceivers);
+            Initialize();
         }
 
         private void OnDestroy()
@@ -187,6 +215,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         /// <returns></returns>
         public AsyncProcessHandle ShowByResourceKey(string resourceKey, bool playAnimation)
         {
+            Initialize();
             return CoroutineManager.Instance.Run(ShowByResourceKeyRoutine(resourceKey, playAnimation));
         }
 
@@ -198,6 +227,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         /// <returns></returns>
         public AsyncProcessHandle Show(string sheetId, bool playAnimation)
         {
+            Initialize();
             return CoroutineManager.Instance.Run(ShowRoutine(sheetId, playAnimation));
         }
 
@@ -207,6 +237,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         /// <param name="playAnimation"></param>
         public AsyncProcessHandle Hide(bool playAnimation)
         {
+            Initialize();
             return CoroutineManager.Instance.Run(HideRoutine(playAnimation));
         }
 
@@ -222,6 +253,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         public AsyncProcessHandle Register(string resourceKey,
             Action<(string sheetId, Sheet sheet)> onLoad = null, bool loadAsync = true, string sheetId = null)
         {
+            Initialize();
             return CoroutineManager.Instance.Run(
                 RegisterRoutine(typeof(Sheet), resourceKey, onLoad, loadAsync, sheetId));
         }
@@ -239,6 +271,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         public AsyncProcessHandle Register(Type sheetType, string resourceKey,
             Action<(string sheetId, Sheet sheet)> onLoad = null, bool loadAsync = true, string sheetId = null)
         {
+            Initialize();
             return CoroutineManager.Instance.Run(RegisterRoutine(sheetType, resourceKey, onLoad, loadAsync, sheetId));
         }
 
@@ -255,6 +288,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
             Action<(string sheetId, TSheet sheet)> onLoad = null, bool loadAsync = true, string sheetId = null)
             where TSheet : Sheet
         {
+            Initialize();
             return CoroutineManager.Instance.Run(RegisterRoutine(typeof(TSheet), resourceKey,
                 x => onLoad?.Invoke((x.sheetId, (TSheet)x.sheet)), loadAsync, sheetId));
         }
@@ -341,6 +375,7 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         /// </summary>
         public void UnregisterAll()
         {
+            Initialize();
             foreach (var sheet in _sheets.Values)
             {
                 if (UnityScreenNavigatorSettings.Instance.CallCleanupWhenDestroy)
