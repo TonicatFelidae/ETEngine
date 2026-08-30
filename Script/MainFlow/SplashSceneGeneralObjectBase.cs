@@ -18,6 +18,10 @@ namespace ETEngine
         [SerializeField] private LoadSceneMode _loadSceneMode = LoadSceneMode.Single;
         [SerializeField] private string[] _unloadSceneNamesAfterLoad = new string[0];
 
+        [Tooltip("How long the splash takes to fade before it is taken off the canvas. " +
+                 "Runs alongside the scene load, so the next scene is revealed through it.")]
+        [SerializeField] private float _splashFadeOutSeconds = 0.4f;
+
         [Tooltip("The last one will show after the scene is loaded")]
         [SerializeField]
         private DelayProgressAndMessage[] _fakeBeginDelayProgressAndMessages = new DelayProgressAndMessage[]
@@ -47,7 +51,9 @@ namespace ETEngine
         {
             Progress = new Progress<float>(value =>
             {
-                _splashScreen.UpdateProgressBar(value);
+                // Null-conditional: the splash is destroyed at the scene swap, well
+                // before InitializeAll reports its final 1.0.
+                _splashScreen?.UpdateProgressBar(value);
             });
             await InitializeServices();
             await OnInitialize();
@@ -58,7 +64,6 @@ namespace ETEngine
         }
         public async Task LoadNextScene()
         {
-
             await ShowFakeBeginProgress();
             await StartInitialization();
             UnloadOtherScenes();
@@ -74,13 +79,14 @@ namespace ETEngine
             for (int i = 0; i < _fakeBeginDelayProgressAndMessages.Length; i++)
             {
                 var item = _fakeBeginDelayProgressAndMessages[i];
-                if (i == _fakeBeginDelayProgressAndMessages.Length - 1)
-                {
-                    await SceneManager.LoadSceneAsync(_nextSceneName, _loadSceneMode);
-
-                }
                 _splashScreen.UpdateProgressBar(item.progress, item.message);
                 await Task.Delay(item.delayMilliseconds);
+                
+                if (i == _fakeBeginDelayProgressAndMessages.Length - 1)
+                {
+                    _ = HideSplashScreenAsync();
+                    await SceneManager.LoadSceneAsync(_nextSceneName, _loadSceneMode);
+                }
             }
         }
         private async Task InitializeServices()
@@ -112,6 +118,33 @@ namespace ETEngine
         public virtual async Task<ISplashScreen> CreateSplashScreen()
         {
             return null;
+        }
+
+        /// <summary>
+        /// Fades the splash out and then takes it off the canvas for good.
+        ///
+        /// <see cref="_splashScreen"/> is deliberately not cleared: it is an interface
+        /// reference, so it does not become Unity's fake null when the object behind it
+        /// is destroyed, and the implementation already no-ops once that happens.
+        /// Clearing it would turn every later progress report into a null dereference.
+        /// </summary>
+        private async Task HideSplashScreenAsync()
+        {
+            if (_splashScreen == null)
+            {
+                return;
+            }
+
+            await _splashScreen.FadeOutAsync(_splashFadeOutSeconds);
+            await DestroySplashScreen();
+        }
+
+        /// <summary>
+        /// Removes the splash the same way <see cref="CreateSplashScreen"/> put it up.
+        /// The base does nothing, because the base does not know what created it.
+        /// </summary>
+        public virtual async Task DestroySplashScreen()
+        {
         }
 
         public async Task StartInitialization()
@@ -178,5 +211,11 @@ namespace ETEngine
     public interface ISplashScreen
     {
         void UpdateProgressBar(float progress, string message = null);
+
+        /// <summary>
+        /// Fades the splash to fully transparent. Awaited before it is destroyed, so
+        /// the scene coming up underneath is revealed rather than cut to.
+        /// </summary>
+        Task FadeOutAsync(float duration);
     }
 }
