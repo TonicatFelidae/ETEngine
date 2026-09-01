@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
@@ -48,6 +49,30 @@ namespace ETEngine
         public async UniTask PopPage(bool playAnimation = true)
         {
             await PageContainer.Pop(playAnimation);
+        }
+
+        public async UniTask<bool> PopToPage<T>(bool playAnimation = true) where T : Page
+        {
+            // Page ids default to the type name (see PushPage), so the stack is
+            // addressable by type without the caller tracking ids.
+            var pageId = typeof(T).Name;
+            var container = PageContainer;
+            var ordered = container?.OrderedPagesIds;
+            if (ordered == null || !ordered.Contains(pageId))
+            {
+                Debug.LogWarning(
+                    $"[UIManager] PopToPage<{pageId}>: not in the page stack ({ordered?.Count ?? 0} entries) — nothing popped.");
+                return false;
+            }
+
+            if (ordered[ordered.Count - 1] == pageId)
+                return true; // already the top page
+
+            while (container.IsInTransition)
+                await UniTask.Yield();
+
+            await container.Pop(playAnimation, pageId).Task;
+            return true;
         }
 
 

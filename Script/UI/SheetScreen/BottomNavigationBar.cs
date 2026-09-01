@@ -24,10 +24,39 @@ public class BottomNavigationBar : MonoBehaviour
     public UnityAction<string> OnTouchNavButton { get; set; }
     public GameObject[] bottomButtonDecorations; // Array to hold references to the decorative elements for each button
 
+    [Header("Layout & Animation Settings")]
+    [SerializeField] private float _scaleFactor = 1.2f;
+    [SerializeField] private float _animationDuration = 0.3f;
+    [SerializeField] private Ease _animationEase = Ease.OutQuad;
+
+    private RectTransform _rectTransform;
+
+    public float ScaleFactor
+    {
+        get => _scaleFactor;
+        set => _scaleFactor = value;
+    }
+
+    public float AnimationDuration
+    {
+        get => _animationDuration;
+        set => _animationDuration = value;
+    }
+
+    public Ease AnimationEase
+    {
+        get => _animationEase;
+        set => _animationEase = value;
+    }
+    private void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+    }
+
     private void Start()
     {
-        SetupButtons();
         UpdateState();
+        InteracEffect(immediate: true);
     }
 
     public BottomNavButtonBase GetBottomNavButtonBase(string viewID)
@@ -39,15 +68,23 @@ public class BottomNavigationBar : MonoBehaviour
         }
         return null;
     }
+    private bool _isSetup = false;
     private void SetupButtons()
     {
         if (_buttons == null || _buttons.Length == 0)
         {
             _buttons = GetComponentsInChildren<BottomNavButtonBase>(true);
         }
-        foreach (var btn in _buttons)
+        if (!_isSetup && _buttons != null)
         {
-            btn.SetOnClick(() => TouchNavButton(btn.viewID));
+            _isSetup = true;
+            foreach (var btn in _buttons)
+            {
+                if (btn != null)
+                {
+                    btn.SetOnClick(() => TouchNavButton(btn.viewID));
+                }
+            }
         }
     }
     public virtual void UpdateState()
@@ -55,7 +92,10 @@ public class BottomNavigationBar : MonoBehaviour
         SetupButtons();
         foreach (var btn in _buttons)
         {
-            btn.SetActive(btn.viewID == currentViewID);
+            if (btn != null)
+            {
+                btn.SetActive(btn.viewID == currentViewID);
+            }
         }
 
     }
@@ -63,7 +103,10 @@ public class BottomNavigationBar : MonoBehaviour
     {
         foreach (var btn in _buttons)
         {
-            btn.SetInteractable(enable);
+            if (btn != null)
+            {
+                btn.SetInteractable(enable);
+            }
         }
     }
 
@@ -76,19 +119,109 @@ public class BottomNavigationBar : MonoBehaviour
             OnTouchNavButton?.Invoke(viewID);
             EnableButtons(false);
             UpdateState();
-            //InteracEffect();
-            await (_UIManager.GetSheetContainer<SheetPage>(sheetContainerID)).Show(viewID, true);
+            InteracEffect();
+            var container = _UIManager.GetSheetContainer<SheetPage>(sheetContainerID);
+
+            // Sheets are registered lazily so an unopened tab costs nothing: the first touch
+            // of a tab is what loads its bundle. Registering an already-registered id is a
+            // no-op, so this stays cheap on every later touch.
+            if (!container.IsRegistered(viewID))
+            {
+                await container.Register(viewID, null, true, viewID);
+            }
+
+            await container.Show(viewID, true);
             EnableButtons(true);
         }
     }
 
 
-    public void InteracEffect()
+    public void InteracEffect(bool immediate = false)
     {
-        // Punch scale effect from 1 to 1.03 for both resource displays
-        Vector3 punchScale = new Vector3(0.03f, 0.03f, 0.03f);
-        float duration = 0.4f;
-        transform.DOPunchScale(punchScale, duration, 2, 0.5f);
+        if (_buttons == null || _buttons.Length == 0)
+        {
+            SetupButtons();
+            if (_buttons == null || _buttons.Length == 0)
+                return;
+        }
+
+        int selectedIndex = -1;
+        for (int i = 0; i < _buttons.Length; i++)
+        {
+            if (_buttons[i] != null && _buttons[i].viewID == currentViewID)
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        int numButtons = _buttons.Length;
+        if (_rectTransform == null)
+        {
+            _rectTransform = GetComponent<RectTransform>();
+        }
+        float totalWidth = (_rectTransform != null && _rectTransform.rect.width > 0f) ? _rectTransform.rect.width : 1080f;
+
+        float activeMultiplier = Mathf.Max(1f, _scaleFactor);
+        float totalWeight = 0f;
+        float[] weights = new float[numButtons];
+
+        for (int i = 0; i < numButtons; i++)
+        {
+            float w = (selectedIndex >= 0 && i == selectedIndex) ? activeMultiplier : 1f;
+            weights[i] = w;
+            totalWeight += w;
+        }
+
+        float accumulatedWeight = 0f;
+        for (int i = 0; i < numButtons; i++)
+        {
+            var btn = _buttons[i];
+            if (btn == null) continue;
+
+            float slotWeight = weights[i];
+            float startNormX = totalWeight > 0f ? (accumulatedWeight / totalWeight) : ((float)i / numButtons);
+            accumulatedWeight += slotWeight;
+            float endNormX = totalWeight > 0f ? (accumulatedWeight / totalWeight) : ((float)(i + 1) / numButtons);
+
+            float slotWidth = (endNormX - startNormX) * totalWidth;
+            float startX = startNormX * totalWidth;
+
+            if (btn.transform is RectTransform btnRect)
+            {
+                float targetX = startX + btnRect.pivot.x * slotWidth;
+                float targetWidth = slotWidth;
+                float height = btnRect.sizeDelta.y > 0f ? btnRect.sizeDelta.y : 160f;
+                float posY = height / 2f;
+
+                btnRect.DOKill();
+
+                if (immediate || _animationDuration <= 0f || !Application.isPlaying)
+                {
+                    btnRect.sizeDelta = new Vector2(targetWidth, height);
+                    btnRect.anchoredPosition = new Vector2(targetX, posY);
+                }
+                else
+                {
+                    float startWidth = btnRect.sizeDelta.x;
+                    float startAnchoredPosX = btnRect.anchoredPosition.x;
+
+                    DOTween.To(() => 0f, t =>
+                    {
+                        if (btnRect != null)
+                        {
+                            float currentWidth = Mathf.LerpUnclamped(startWidth, targetWidth, t);
+                            float currentX = Mathf.LerpUnclamped(startAnchoredPosX, targetX, t);
+                            btnRect.sizeDelta = new Vector2(currentWidth, height);
+                            btnRect.anchoredPosition = new Vector2(currentX, posY);
+                        }
+                    }, 1f, _animationDuration)
+                    .SetEase(_animationEase)
+                    .SetTarget(btnRect);
+                }
+            }
+        }
+
     }
     public void ShowAllButtons(bool show)
     {
@@ -101,5 +234,19 @@ public class BottomNavigationBar : MonoBehaviour
             deco.gameObject.SetActive(show);
         }
 
+    }
+
+    private void OnDestroy()
+    {
+        if (_buttons != null)
+        {
+            for (int i = 0; i < _buttons.Length; i++)
+            {
+                if (_buttons[i] != null && _buttons[i].transform != null)
+                {
+                    _buttons[i].transform.DOKill();
+                }
+            }
+        }
     }
 }

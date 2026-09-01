@@ -30,6 +30,15 @@ namespace ETEngine
         /// <param name="playAnimation"></param>
         UniTask PopPage(bool playAnimation = true);
 
+        /// <summary>
+        /// Pops every page above <typeparamref name="T"/> so it ends up on top,
+        /// however deep the stack has grown. Returns false (and pops nothing) when
+        /// that page is not in the stack: <c>PageContainer.Pop(bool, string)</c>
+        /// throws in that case, and a navigation helper called from an error path
+        /// must not be able to take the session down with it.
+        /// </summary>
+        UniTask<bool> PopToPage<T>(bool playAnimation = true) where T : Page;
+
 
         UniTask<T> PushPopup<T>(string modelId = null, bool playAnimation = true,
             Action<(string modalId, T modal)> loadCallback = null
