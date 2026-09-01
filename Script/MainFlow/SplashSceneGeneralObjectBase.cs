@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer;
@@ -76,18 +78,42 @@ namespace ETEngine
                 Debug.LogWarning("SplashScreen is null, skipping fake begin progress");
                 return;
             }
+            var from = 0f;
             for (int i = 0; i < _fakeBeginDelayProgressAndMessages.Length; i++)
             {
                 var item = _fakeBeginDelayProgressAndMessages[i];
-                _splashScreen.UpdateProgressBar(item.progress, item.message);
-                await Task.Delay(item.delayMilliseconds);
-                
+                await AnimateProgressAsync(from, item.progress, item.delayMilliseconds, item.message);
+                from = item.progress;
+
                 if (i == _fakeBeginDelayProgressAndMessages.Length - 1)
                 {
                     _ = HideSplashScreenAsync();
                     await SceneManager.LoadSceneAsync(_nextSceneName, _loadSceneMode);
                 }
             }
+        }
+
+        private async Task AnimateProgressAsync(float from, float to, int durationMilliseconds, string message)
+        {
+            _splashScreen.UpdateProgressBar(from, message);
+
+            if (durationMilliseconds <= 0)
+            {
+                _splashScreen.UpdateProgressBar(to);
+                return;
+            }
+
+            var value = from;
+            Tween tween = DOTween
+                .To(() => value, v =>
+                {
+                    value = v;
+                    _splashScreen.UpdateProgressBar(v);
+                }, to, durationMilliseconds / 1000f)
+                .SetEase(Ease.Linear)
+                .SetUpdate(true);
+
+            await UniTask.WaitUntil(() => tween == null || !tween.IsActive());
         }
         private async Task InitializeServices()
         {
