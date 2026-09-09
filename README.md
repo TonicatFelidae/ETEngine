@@ -1,6 +1,6 @@
 ## 🧭 Installation
 ```bash
-git rm -r --cached Assets/Plugins/ETEngine
+git rm -r --cached Assets/Plugins/ETEngine (Do not need on first run)
 git submodule add https://github.com/TonicatFelidae/ETEngine.git Assets/Plugins/ETEngine
 ```
 ## 🧭 Dependencies
