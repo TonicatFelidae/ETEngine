@@ -30,6 +30,8 @@ public class BottomNavigationBar : MonoBehaviour
     [SerializeField] private Ease _animationEase = Ease.OutQuad;
 
     private RectTransform _rectTransform;
+    private readonly System.Collections.Generic.HashSet<string> _hiddenViewIDs = new();
+    private bool _showAll = true;
 
     public float ScaleFactor
     {
@@ -61,6 +63,7 @@ public class BottomNavigationBar : MonoBehaviour
 
     public BottomNavButtonBase GetBottomNavButtonBase(string viewID)
     {
+        SetupButtons();
         foreach (var btn in _buttons)
         {
             if (btn.viewID == viewID)
@@ -68,6 +71,21 @@ public class BottomNavigationBar : MonoBehaviour
         }
         return null;
     }
+
+    // A hidden button leaves the layout entirely (the others widen to fill it)
+    // and stays hidden through ShowAllButtons.
+    public void SetButtonHidden(string viewID, bool hidden)
+    {
+        var btn = GetBottomNavButtonBase(viewID);
+        if (btn == null) return;
+        bool changed = hidden ? _hiddenViewIDs.Add(viewID) : _hiddenViewIDs.Remove(viewID);
+        if (!changed) return;
+        btn.gameObject.SetActive(_showAll && !hidden);
+        InteracEffect(immediate: true);
+    }
+
+    public bool IsButtonHidden(string viewID) => _hiddenViewIDs.Contains(viewID);
+
     private bool _isSetup = false;
     private void SetupButtons()
     {
@@ -145,17 +163,24 @@ public class BottomNavigationBar : MonoBehaviour
                 return;
         }
 
-        int selectedIndex = -1;
-        for (int i = 0; i < _buttons.Length; i++)
+        var visible = new System.Collections.Generic.List<BottomNavButtonBase>(_buttons.Length);
+        foreach (var b in _buttons)
         {
-            if (_buttons[i] != null && _buttons[i].viewID == currentViewID)
+            if (b != null && !_hiddenViewIDs.Contains(b.viewID))
+                visible.Add(b);
+        }
+
+        int selectedIndex = -1;
+        for (int i = 0; i < visible.Count; i++)
+        {
+            if (visible[i].viewID == currentViewID)
             {
                 selectedIndex = i;
                 break;
             }
         }
 
-        int numButtons = _buttons.Length;
+        int numButtons = visible.Count;
         if (_rectTransform == null)
         {
             _rectTransform = GetComponent<RectTransform>();
@@ -176,8 +201,7 @@ public class BottomNavigationBar : MonoBehaviour
         float accumulatedWeight = 0f;
         for (int i = 0; i < numButtons; i++)
         {
-            var btn = _buttons[i];
-            if (btn == null) continue;
+            var btn = visible[i];
 
             float slotWeight = weights[i];
             float startNormX = totalWeight > 0f ? (accumulatedWeight / totalWeight) : ((float)i / numButtons);
@@ -225,9 +249,10 @@ public class BottomNavigationBar : MonoBehaviour
     }
     public void ShowAllButtons(bool show)
     {
+        _showAll = show;
         foreach (var btn in _buttons)
         {
-            btn.gameObject.SetActive(show);
+            btn.gameObject.SetActive(show && !_hiddenViewIDs.Contains(btn.viewID));
         }
         foreach (var deco in bottomButtonDecorations)
         {
