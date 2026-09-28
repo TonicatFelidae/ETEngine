@@ -120,6 +120,11 @@ namespace ETSimpleKit.SoundSystem
         /// <param name="pitch"></param>
         public void PlayEF3D(int index, Vector3 loc, float pitch = 1, bool allowOverlap = false)
         {
+            if (index > effectClips.Count - 1)
+            {
+                Debug.LogWarning($"PlayEF3D: index {index} is out of range for effectClips.");
+                return;
+            }
             if (allowOverlap)
             {
                 // Bypass pool system for overlapping sounds - use PlayOneShot directly
@@ -132,6 +137,7 @@ namespace ETSimpleKit.SoundSystem
         }
         public void PlayEF3D(string index, Vector3 loc, float pitch = 1)
         {
+            
             SoundObject3D go = _eTPoolManager.GetObjectFromPool<SoundObject3D>(index.ToString(), Sound3DContainer, _pp_soundObject3D);
             go.Init(this);
             go.Play(loc, soundsDict[index], EFVolume, pitch);
@@ -205,6 +211,11 @@ namespace ETSimpleKit.SoundSystem
         public void PlayAB4() => PlayAB(4);
         public void PlayAB(int index)
         {
+            if (index > amberClips.Count - 1)
+            {
+                Debug.LogError($"PlayAB: index {index} is out of range for amberClips.");
+                return;
+            }
             _soAB.clip = amberClips[index];
             _soAB.volume = BGVolume * amberMultiply;
             _soAB.Play();
@@ -218,6 +229,11 @@ namespace ETSimpleKit.SoundSystem
         public void PlayBG4() => PlayBG(4);
         public void PlayBG(int index)
         {
+            if (index > backgroundClips.Count - 1)
+            {
+                Debug.LogError($"PlayBG: index {index} is out of range for backgroundClips.");
+                return;
+            }
             _soBG.clip = backgroundClips[index];
             _soBG.volume = BGVolume;
             _soBG.Play();
@@ -245,6 +261,11 @@ namespace ETSimpleKit.SoundSystem
         }
         public void PlayEF(int index)
         {
+            if (index > effectClips.Count - 1)
+            {
+                Debug.LogError($"PlayEF: index {index} is out of range for effectClips.");
+                return;
+            }
             _soEF.clip = effectClips[index];
             _soEF.volume = EFVolume;
             _soEF.Play();
@@ -265,6 +286,11 @@ namespace ETSimpleKit.SoundSystem
         public void PlayUIBut4() => PlayUIBut(4);
         public void PlayUIBut(int index)
         {
+            if (index > buttonClips.Count - 1)
+            {
+                Debug.LogError($"PlayUIBut: index {index} is out of range for buttonClips.");
+                return;
+            }
             _soUI.clip = buttonClips[index];
             _soUI.volume = UIVolume;
             _soUI.Play();
