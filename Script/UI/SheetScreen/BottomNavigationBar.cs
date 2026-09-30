@@ -77,7 +77,17 @@ public class BottomNavigationBar : MonoBehaviour
             EnableButtons(false);
             UpdateState();
             //InteracEffect();
-            await (_UIManager.GetSheetContainer<SheetPage>(sheetContainerID)).Show(viewID, true);
+            var container = _UIManager.GetSheetContainer<SheetPage>(sheetContainerID);
+
+            // Sheets are registered lazily so an unopened tab costs nothing: the first touch
+            // of a tab is what loads its bundle. Registering an already-registered id is a
+            // no-op, so this stays cheap on every later touch.
+            if (!container.IsRegistered(viewID))
+            {
+                await container.Register(viewID, null, true, viewID);
+            }
+
+            await container.Show(viewID, true);
             EnableButtons(true);
         }
     }

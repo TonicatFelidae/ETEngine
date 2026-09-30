@@ -34,6 +34,11 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
 
         [SerializeField] private string _name;
 
+        [SerializeField]
+        [Tooltip("Destroy and release a sheet as soon as a different one is shown. Leave off to " +
+                 "keep every sheet the player has opened resident (the historical behaviour).")]
+        private bool _unloadInactiveSheets;
+
         private readonly Dictionary<string, AssetLoadHandle<GameObject>> _assetLoadHandles
             = new Dictionary<string, AssetLoadHandle<GameObject>>();
 
@@ -82,6 +87,17 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
         ///     Registered sheets.
         /// </summary>
         public IReadOnlyDictionary<string, Sheet> Sheets => _sheets;
+
+        /// <summary>
+        ///     When true, showing a sheet destroys the previously active one and releases its
+        ///     asset handle, so its bundle can leave memory. Off by default because every
+        ///     existing caller assumed registration was permanent.
+        /// </summary>
+        public bool UnloadInactiveSheets
+        {
+            get => _unloadInactiveSheets;
+            set => _unloadInactiveSheets = value;
+        }
 
         public bool Interactable
         {
@@ -266,6 +282,15 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
 
             sheetId ??= Guid.NewGuid().ToString();
 
+            // Sheets are now registered lazily, on the first touch of their tab, so the same
+            // id legitimately arrives here more than once. This used to throw out of
+            // _sheets.Add; a second registration has to be a no-op instead.
+            if (_sheets.ContainsKey(sheetId))
+            {
+                yield return sheetId;
+                yield break;
+            }
+
             Sheet sheet = null;
             yield return LoadSheet(sheetType,
                 resourceKey,
@@ -299,6 +324,8 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
             Assert.IsFalse(ActiveSheetId != null && ActiveSheetId == sheetId,
                 "Cannot transition because the sheet is already active.");
 
+            var previousSheetId = ActiveSheetId;
+
             var context = SheetShowContext.Create(sheetId, ActiveSheetId, _sheets);
 
             _transitionHandler.Begin();
@@ -312,6 +339,13 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
             ActiveSheetId = sheetId;
 
             _transitionHandler.End();
+
+            // Only now, after the outgoing sheet has finished animating away, is it safe to
+            // drop it: the transition needed both sheets alive. Skipping this is what kept
+            // every tab the player ever opened - and its whole bundle - resident for the
+            // rest of the session.
+            if (_unloadInactiveSheets && previousSheetId != null && previousSheetId != sheetId)
+                Deregister(previousSheetId);
         }
 
         private IEnumerator HideRoutine(bool playAnimation)
@@ -334,6 +368,62 @@ namespace UnityScreenNavigator.Runtime.Core.Sheet
             ActiveSheetId = null;
 
             _transitionHandler.End();
+        }
+
+        /// <summary>
+        ///     True when <paramref name="sheetId" /> is already registered, and therefore
+        ///     already instantiated and holding an asset handle.
+        /// </summary>
+        public bool IsRegistered(string sheetId)
+        {
+            return sheetId != null && _sheets.ContainsKey(sheetId);
+        }
+
+        /// <summary>
+        ///     Destroy one registered sheet and release the asset handle behind it. Pairs with
+        ///     <see cref="Register(string,Action{ValueTuple{string,Sheet}},bool,string)" />;
+        ///     releasing the handle is what lets Addressables unload the sheet's bundle once
+        ///     nothing else references it.
+        ///     Refuses to drop the active sheet - that would leave the container showing a
+        ///     destroyed object.
+        /// </summary>
+        public void Deregister(string sheetId)
+        {
+            if (sheetId == null || !_sheets.TryGetValue(sheetId, out var sheet))
+                return;
+
+            if (ActiveSheetId == sheetId)
+            {
+                Debug.LogWarning(
+                    $"[SheetContainer] Refused to deregister '{sheetId}' because it is the active sheet.");
+                return;
+            }
+
+            if (UnityScreenNavigatorSettings.Instance.CallCleanupWhenDestroy)
+                sheet.BeforeReleaseAndForget();
+
+            if (sheet != null)
+                Destroy(sheet.gameObject);
+
+            _sheets.Remove(sheetId);
+
+            // _sheetNameToId is keyed by resource key, so the entry has to be found by value.
+            string resourceKey = null;
+            foreach (var pair in _sheetNameToId)
+                if (pair.Value == sheetId)
+                {
+                    resourceKey = pair.Key;
+                    break;
+                }
+
+            if (resourceKey != null)
+                _sheetNameToId.Remove(resourceKey);
+
+            if (_assetLoadHandles.TryGetValue(sheetId, out var assetLoadHandle))
+            {
+                AssetLoader.Release(assetLoadHandle);
+                _assetLoadHandles.Remove(sheetId);
+            }
         }
 
         /// <summary>
