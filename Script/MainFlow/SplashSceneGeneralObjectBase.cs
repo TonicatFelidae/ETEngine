@@ -76,6 +76,7 @@ namespace ETEngine
             if (_splashScreen == null)
             {
                 Debug.LogWarning("SplashScreen is null, skipping fake begin progress");
+                await OnBeforeLoadNextScene();
                 return;
             }
             var from = 0f;
@@ -87,6 +88,7 @@ namespace ETEngine
 
                 if (i == _fakeBeginDelayProgressAndMessages.Length - 1)
                 {
+                    await OnBeforeLoadNextScene();
                     _ = HideSplashScreenAsync();
                     await SceneManager.LoadSceneAsync(_nextSceneName, _loadSceneMode);
                 }
@@ -138,6 +140,15 @@ namespace ETEngine
         }
         public virtual async Task OnInitialize()
         {
+        }
+
+        /// <summary>
+        /// Runs once the progress bar has finished, with the splash still up, right
+        /// before the next scene starts loading. The load waits for it.
+        /// </summary>
+        public virtual Task OnBeforeLoadNextScene()
+        {
+            return Task.CompletedTask;
         }
 
 
