@@ -7,11 +7,11 @@ using VContainer;
 namespace ET.Monetization
 {
     /// <summary>
-    /// Type L (Lifecycle Class) implementation of IMonetizationService and IAdsHelper.
+    /// Type L (Lifecycle Class) implementation of IMonetizationService.
     /// Manages ad providers, interstitial cooldown timers, and telemetry routing in an abstract manner.
     /// Registered in VContainer via Lifetime.Singleton or Lifetime.Scoped.
     /// </summary>
-    public class MonetizationService : IMonetizationService, IAdsHelper
+    public class MonetizationService : IMonetizationService
     {
         //Field
         [SerializeField] private float _interstitialCooldownSeconds = 30f;
@@ -170,17 +170,6 @@ namespace ET.Monetization
             ValidateProvider();
             return _provider.WaitForInterstitialReadyAsync(timeoutSeconds);
         }
-
-        public void ShowInterstitialAds(UnityAction onCompleted = null, UnityAction onFailed = null, AdCheckReason reason = AdCheckReason.None, string placement = "")
-        {
-            string resolvedPlacement = !string.IsNullOrEmpty(placement) ? placement : reason.ToString();
-            ShowInterstitial(onCompleted, onFailed, resolvedPlacement);
-        }
-
-        public UniTask<bool> WaitForInterstitialAdReadyAsync(float timeoutSeconds = 10)
-        {
-            return WaitForInterstitialReadyAsync(timeoutSeconds);
-        }
         #endregion
 
         #region Rewarded Operations
@@ -200,17 +189,6 @@ namespace ET.Monetization
         {
             ValidateProvider();
             return _provider.WaitForRewardedReadyAsync(timeoutSeconds);
-        }
-
-        public void ShowRewardAds(UnityAction onCompleted, UnityAction onFailed, AdCheckReason reason = AdCheckReason.None, string placement = "")
-        {
-            string resolvedPlacement = !string.IsNullOrEmpty(placement) ? placement : reason.ToString();
-            ShowRewarded(onCompleted, onFailed, resolvedPlacement);
-        }
-
-        public UniTask<bool> WaitForRewardAdReadyAsync(AdCheckReason reason, float timeoutSeconds = 10)
-        {
-            return WaitForRewardedReadyAsync(timeoutSeconds);
         }
         #endregion
 
