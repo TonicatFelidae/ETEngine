@@ -105,6 +105,26 @@ namespace ETSimpleKit.SoundSystem
             this.soundsDict = soundsDict;
         }
         /// <summary>
+        /// Bound dict, or every assigned clip keyed by its asset name
+        /// </summary>
+        private Dictionary<string, AudioClip> SoundsDict
+        {
+            get
+            {
+                if (soundsDict == null)
+                {
+                    soundsDict = new();
+                    foreach (var list in new[] { buttonClips, UIClips, effectClips, catTouchClips, backgroundClips, amberClips })
+                    {
+                        if (list == null) continue;
+                        foreach (var clip in list)
+                            if (clip != null) soundsDict.TryAdd(clip.name, clip);
+                    }
+                }
+                return soundsDict;
+            }
+        }
+        /// <summary>
         /// Play Effect3D at mainCamera
         /// </summary>
         /// <param name="index"></param>
@@ -134,7 +154,7 @@ namespace ETSimpleKit.SoundSystem
         {
             SoundObject3D go = _eTPoolManager.GetObjectFromPool<SoundObject3D>(index.ToString(), Sound3DContainer, _pp_soundObject3D);
             go.Init(this);
-            go.Play(loc, soundsDict[index], EFVolume, pitch);
+            go.Play(loc, SoundsDict[index], EFVolume, pitch);
         }
         //pitch
         public void SetPitch(SoundType soundType, float pitch)
@@ -254,6 +274,17 @@ namespace ETSimpleKit.SoundSystem
         public void PlayUI(int index)
         {
             _soUI.clip = UIClips[index];
+            _soUI.volume = UIVolume;
+            _soUI.Play();
+        }
+        public void PlayUI(string key)
+        {
+            if (!SoundsDict.TryGetValue(key, out AudioClip clip))
+            {
+                Debug.LogWarning($"SoundGeneral PlayUI: no sound with key '{key}'");
+                return;
+            }
+            _soUI.clip = clip;
             _soUI.volume = UIVolume;
             _soUI.Play();
         }
