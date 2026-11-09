@@ -9,6 +9,15 @@ namespace ETEngine
     public class UIManagerInstaller
     {
         public static bool mainCasvasForAllInstalled = false;
+
+#if UNITY_EDITOR
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            mainCasvasForAllInstalled = false;
+        }
+#endif
+
         public static void Install(IContainerBuilder builder, ProjectInstallerSetup projectInstallerSetup)
         {
             Install(builder, (IObjectResolver)null, projectInstallerSetup, false);
@@ -52,8 +61,10 @@ namespace ETEngine
             {
                 var serviceA = container.Resolve<PageFactory>();
                 var serviceB = container.Resolve<PopupFactory>();
-                var mainCanvas = container.Resolve<MainCanvas>();
-                mainCanvas.ReInitiation(serviceA, serviceB);
+                if (container.TryResolve<MainCanvas>(out var mainCanvas))
+                {
+                    mainCanvas.ReInitiation(serviceA, serviceB);
+                }
                 // ...
             });
         }
