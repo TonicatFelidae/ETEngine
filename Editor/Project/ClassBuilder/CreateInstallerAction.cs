@@ -9,26 +9,28 @@ namespace ETEngine.Editor
         public override void Action(int instanceId, string pathName, string resourceFile)
         {
             string baseName = Path.GetFileNameWithoutExtension(pathName);
-            string className = baseName + ProjectBuilderConstants.SuffixInstaller;
+            string className = baseName.EndsWith(ProjectBuilderConstants.SuffixInstaller)
+                ? baseName
+                : baseName + ProjectBuilderConstants.SuffixInstaller;
             Directory.CreateDirectory(ProjectBuilderConstants.DirInstaller);
             pathName = Path.Combine(ProjectBuilderConstants.DirInstaller, className + ".cs");
             string content =
-$@"using UnityEngine;
+$@"using ETEngine;
+using UnityEngine;
+using VContainer;
 
 namespace Game
 {{
-    public class {className} : MonoBehaviour
+    public class {className} : ETLifetimeScope
     {{
-        private void Awake()
+        protected override void Register(IContainerBuilder builder)
         {{
+            base.Configure(builder);
         }}
 
-        private void Start()
+        protected override void RegisterBuildCallback(IObjectResolver resolver)
         {{
-        }}
-
-        private void Update()
-        {{
+            base.RegisterBuildCallback(resolver);
         }}
     }}
 }}";
