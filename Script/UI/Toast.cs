@@ -12,6 +12,10 @@ namespace ETEngine
     public class Toast : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _toastMessage;
+        void Awake()
+        {
+            gameObject.SetActive(false);
+        }
         public void PushNoti(string message, float duration)
         {
             StopAllCoroutines();

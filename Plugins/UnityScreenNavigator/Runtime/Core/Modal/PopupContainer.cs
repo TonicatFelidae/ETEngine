@@ -325,7 +325,6 @@ namespace UnityScreenNavigator.Runtime.Core.Modal
             Assert.IsNotNull(resourceKey);
             //Assert.IsFalse(IsInTransition,
             //    "Cannot transition because the screen is already in transition.");
-
             _transitionHandler.Begin();
 
             // If the user explicitly specifies modalId, use it, otherwise generate it
